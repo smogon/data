@@ -32,41 +32,39 @@ export interface Nature
   extends DeepReadonly<{
     id: ID;
     name: NatureName;
-    mod?: {
+    mod: {
       plus: StatName;
       minus: StatName;
-    };
+    } | null;
   }> {}
 
 class NatureImpl implements Nature {
   readonly id: ID;
-  constructor(readonly name: NatureName, readonly mod?: { plus: StatName; minus: StatName }) {
+  constructor(readonly name: NatureName, readonly mod: { plus: StatName; minus: StatName } | null) {
     this.id = toID(name);
     this.name = name;
-    if (mod) this.mod = mod;
+    this.mod = mod;
   }
 
   toString(): string {
     return this.name;
   }
 
-  toJSON(): Nullable<Omit<Nature, 'id'>> {
-    const json: Nullable<Omit<Nature, 'id'>> = { name: this.name };
-    if (this.mod) json.mod = this.mod;
-    return json;
+  toJSON() {
+    return { name: this.name, mod: this.mod || undefined };
   }
 }
 
 const NATURES: Readonly<{ [id: string]: Nature }> = {
   adamant: new NatureImpl('Adamant', { plus: 'atk', minus: 'spa' }),
-  bashful: new NatureImpl('Bashful'),
+  bashful: new NatureImpl('Bashful', null),
   bold: new NatureImpl('Bold', { plus: 'def', minus: 'atk' }),
   brave: new NatureImpl('Brave', { plus: 'atk', minus: 'spe' }),
   calm: new NatureImpl('Calm', { plus: 'spd', minus: 'atk' }),
   careful: new NatureImpl('Careful', { plus: 'spd', minus: 'spa' }),
-  docile: new NatureImpl('Docile'),
+  docile: new NatureImpl('Docile', null),
   gentle: new NatureImpl('Gentle', { plus: 'spd', minus: 'def' }),
-  hardy: new NatureImpl('Hardy'),
+  hardy: new NatureImpl('Hardy', null),
   hasty: new NatureImpl('Hasty', { plus: 'spe', minus: 'def' }),
   impish: new NatureImpl('Impish', { plus: 'def', minus: 'spa' }),
   jolly: new NatureImpl('Jolly', { plus: 'spe', minus: 'spa' }),
@@ -77,24 +75,22 @@ const NATURES: Readonly<{ [id: string]: Nature }> = {
   naive: new NatureImpl('Naive', { plus: 'spe', minus: 'spd' }),
   naughty: new NatureImpl('Naughty', { plus: 'atk', minus: 'spd' }),
   quiet: new NatureImpl('Quiet', { plus: 'spa', minus: 'spe' }),
-  quirky: new NatureImpl('Quirky'),
+  quirky: new NatureImpl('Quirky', null),
   rash: new NatureImpl('Rash', { plus: 'spa', minus: 'spd' }),
   relaxed: new NatureImpl('Relaxed', { plus: 'def', minus: 'spe' }),
   sassy: new NatureImpl('Sassy', { plus: 'spd', minus: 'spe' }),
-  serious: new NatureImpl('Serious'),
+  serious: new NatureImpl('Serious', null),
   timid: new NatureImpl('Timid', { plus: 'spe', minus: 'atk' }),
 };
 
-export class Natures {
-  private contructor() {}
-
-  static get(id: ID): Nature | undefined {
+export const Natures = {
+  get(id: ID): Nature | undefined {
     return NATURES[id];
-  }
+  },
 
-  static *[Symbol.iterator](): IterableIterator<Nature> {
+  *[Symbol.iterator](): IterableIterator<Nature> {
     for (const id in NATURES) {
       yield NATURES[id];
     }
-  }
-}
+  },
+};

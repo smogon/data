@@ -6,7 +6,7 @@ export type StatsTable<T = number> = { [stat in StatName]: T };
 export type BoostName = Exclude<StatName, 'hp'> | 'accuracy' | 'evasion';
 export type BoostsTable<T = number> = { [boost in BoostName]: T };
 
-const STATS: StatName[] = ['hp', 'atk', 'def', 'spe', 'spa', 'spd'];
+const STATS: readonly StatName[] = ['hp', 'atk', 'def', 'spe', 'spa', 'spd'];
 
 const NAMES: Readonly<{ [name: string]: StatName }> = {
   HP: 'hp',

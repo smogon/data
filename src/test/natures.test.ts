@@ -22,7 +22,7 @@ describe('Natures', () => {
 
     const serious = Natures.get('serious' as ID);
     expect(serious).toBeDefined();
-    expect(serious!.mod).not.toBeDefined();
+    expect(serious!.mod).toBe(null);
     expect(serious!.toString()).toBe('Serious');
     expect(JSON.stringify(serious)).toBe(JSON.stringify({ name: 'Serious' }));
 
