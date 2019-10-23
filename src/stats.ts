@@ -93,7 +93,7 @@ export class Stats {
 
   static display(str: string, full = false, gen: GenerationNumber = 7): string {
     let s: StatName | 'spc' | undefined = NAMES[str];
-    if (!s) return str;
+    if (s === undefined) return str;
     if (gen === 1 && s === 'spa') s = 'spc';
     return DISPLAY[s][+full];
   }
@@ -115,10 +115,10 @@ export class Stats {
 
   static getHPDV(ivs: Partial<StatsTable>): number {
     return (
-      (Stats.itod(ivs.atk || 31) % 2) * 8 +
-      (Stats.itod(ivs.def || 31) % 2) * 4 +
-      (Stats.itod(ivs.spe || 31) % 2) * 2 +
-      (Stats.itod(ivs.spa || 31) % 2)
+      (Stats.itod(ivs.atk === undefined ? 31 : ivs.atk) % 2) * 8 +
+      (Stats.itod(ivs.def === undefined ? 31 : ivs.def) % 2) * 4 +
+      (Stats.itod(ivs.spe === undefined ? 31 : ivs.spe) % 2) * 2 +
+      (Stats.itod(ivs.spa === undefined ? 31 : ivs.spa) % 2)
     );
   }
 
@@ -152,7 +152,7 @@ function calcADV(
       : Math.floor(((base * 2 + iv + Math.floor(ev / 4)) * level) / 100) + level + 10;
   } else {
     let mod = 1;
-    if (nature && nature.mod) {
+    if (nature !== undefined && nature.mod !== null) {
       if (nature.mod.plus === stat) {
         mod = 1.1;
       } else if (nature.mod.minus === stat) {

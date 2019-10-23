@@ -51,7 +51,7 @@ class NatureImpl implements Nature {
   }
 
   toJSON() {
-    return { name: this.name, mod: this.mod || undefined };
+    return { name: this.name, mod: this.mod === null ? undefined : this.mod };
   }
 }
 
