@@ -1,27 +1,17 @@
 {
-  "extends": "gts/tslint.json",
+  "extends": [
+    "gts/tslint.json", "./tslint-semantic.json"
+  ],
   "rules": {
-    "await-promise": true,
-    "ban-comma-operator": true,
     "forin": false,
     "new-parens": false,
     "no-any": false,
-    "no-async-without-await": true,
-    "no-conditional-assignment": false,
-    "no-floating-promises": true,
-    "no-for-in-array": true,
-    "no-implicit-dependencies": true,
-    "no-invalid-template-strings": true,
-    "no-promise-as-boolean": true,
-    "no-switch-case-fall-through": true,
-    "no-var-keyword": true,
     "prefer-const": {
       "options": {
         "destructuring": "all"
       }
     },
     "switch-default": false,
-    "triple-equals": true,
     "variable-name": false
   }
 }

@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "await-promise": true,
+    "ban-comma-operator": true,
+    "no-async-without-await": true,
+    "no-floating-promises": true,
+    "no-for-in-array": true,
+    "no-implicit-dependencies": true,
+    "no-invalid-template-strings": true,
+    "no-promise-as-boolean": true,
+    "no-switch-case-fall-through": true,
+    "no-var-keyword": true,
+    "triple-equals": true
+  }
+}
