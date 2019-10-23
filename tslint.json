@@ -1,0 +1,17 @@
+{
+  "extends": [
+    "gts/tslint.json", "./tslint-semantic.json"
+  ],
+  "rules": {
+    "forin": false,
+    "new-parens": false,
+    "no-any": false,
+    "prefer-const": {
+      "options": {
+        "destructuring": "all"
+      }
+    },
+    "switch-default": false,
+    "variable-name": false
+  }
+}

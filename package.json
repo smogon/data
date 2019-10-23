@@ -1,0 +1,40 @@
+{
+  "name": "@smogon/data",
+  "version": "0.0.1",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "description": "Core functionality required for building Pokémon applications (fundamental data and logic)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smogon/data.git"
+  },
+  "contributors": [
+    "Christopher Monsanto <chaos@smogon.com>",
+    "Guangcong Luo <zarel@smogon.com>",
+    "Kirk Scheibelhut <pre@smogon.com>",
+    "Mathieu Dias-Martins <marty@smogon.com>"
+  ],
+  "dependencies": {
+    "@types/node": "^12.11.5"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.19",
+    "gts": "^1.1.0",
+    "jest": "^24.9.0",
+    "source-map-support": "^0.5.13",
+    "ts-jest": "^24.1.0",
+    "typescript": "^3.6.4"
+  },
+  "scripts": {
+    "lint": "gts check",
+    "fix": "gts fix",
+    "compile": "tsc",
+    "test": "jest",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run lint",
+    "build": "tsc && tslint --project . -c tslint-semantic.json",
+    "fullbuild": "npm run compile && npm run lint"
+  }
+}
