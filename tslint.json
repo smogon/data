@@ -4,7 +4,6 @@
   ],
   "rules": {
     "forin": false,
-    "new-parens": false,
     "no-any": false,
     "prefer-const": {
       "options": {
