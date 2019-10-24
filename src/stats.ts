@@ -46,87 +46,87 @@ const DISPLAY: Readonly<{ [stat: string]: Readonly<[string, string]> }> = {
   spc: ['Spc', 'Special'],
 };
 
-export class Stats {
-  private constructor() {}
+export const Stats = {
+  calc,
 
-  static calc(
-    stat: StatName,
-    base: number,
-    iv: number,
-    ev: number,
-    level: number,
-    gen?: 1 | 2
-  ): number;
-  static calc(
-    stat: StatName,
-    base: number,
-    iv: number,
-    ev: number,
-    level: number,
-    nature: Nature,
-    gen: GenerationNumber
-  ): number;
-  static calc(
-    stat: StatName,
-    base: number,
-    iv = 31,
-    ev = 252,
-    level = 100,
-    genOrNature?: GenerationNumber | Nature,
-    gen: GenerationNumber = 7
-  ): number {
-    let nature: Nature | undefined = undefined;
-    if (typeof genOrNature === 'number') {
-      gen = genOrNature;
-    } else {
-      nature = genOrNature;
-    }
-
-    return gen < 3
-      ? calcRBY(stat, base, Stats.itod(iv), ev, level)
-      : calcADV(stat, base, iv, ev, level, nature);
-  }
-
-  static get(s: string): StatName | undefined {
+  get(s: string): StatName | undefined {
     return NAMES[s];
-  }
+  },
 
-  static display(str: string, full = false, gen: GenerationNumber = 7): string {
+  display(str: string, full = false, gen: GenerationNumber = 7): string {
     let s: StatName | 'spc' | undefined = NAMES[str];
     if (s === undefined) return str;
     if (gen === 1 && s === 'spa') s = 'spc';
     return DISPLAY[s][+full];
-  }
+  },
 
-  static fill<T>(stats: Partial<StatsTable<T>>, val: T): StatsTable<T> {
+  fill<T>(stats: Partial<StatsTable<T>>, val: T): StatsTable<T> {
     for (const stat of STATS) {
       if (!(stat in stats)) stats[stat] = val;
     }
     return stats as StatsTable<T>;
-  }
+  },
 
-  static itod(iv: number): number {
+  itod(iv: number): number {
     return Math.floor(iv / 2);
-  }
+  },
 
-  static dtoi(dv: number): number {
+  dtoi(dv: number): number {
     return dv * 2 + 1;
-  }
+  },
 
-  static getHPDV(ivs: Partial<StatsTable>): number {
+  getHPDV(ivs: Partial<StatsTable>): number {
     return (
       (Stats.itod(ivs.atk === undefined ? 31 : ivs.atk) % 2) * 8 +
       (Stats.itod(ivs.def === undefined ? 31 : ivs.def) % 2) * 4 +
       (Stats.itod(ivs.spe === undefined ? 31 : ivs.spe) % 2) * 2 +
       (Stats.itod(ivs.spa === undefined ? 31 : ivs.spa) % 2)
     );
-  }
+  },
 
-  static *[Symbol.iterator](): IterableIterator<StatName> {
+  *[Symbol.iterator](): IterableIterator<StatName> {
     for (const s of STATS) {
       yield s;
     }
+  },
+};
+
+function calc(
+  stat: StatName,
+  base: number,
+  iv: number,
+  ev: number,
+  level: number,
+  gen?: 1 | 2
+): number;
+function calc(
+  stat: StatName,
+  base: number,
+  iv: number,
+  ev: number,
+  level: number,
+  nature: Nature,
+  gen: GenerationNumber
+): number;
+function calc(
+  stat: StatName,
+  base: number,
+  iv = 31,
+  ev = 252,
+  level = 100,
+  genOrNature?: GenerationNumber | Nature,
+  gen: GenerationNumber = 7
+): number {
+  let nature: Nature | undefined = undefined;
+  if (typeof genOrNature === 'number') {
+    gen = genOrNature;
+  } else {
+    nature = genOrNature;
   }
+
+  return gen < 3
+    ? calcRBY(stat, base, Stats.itod(iv), ev, level)
+    : calcADV(stat, base, iv, ev, level, nature);
 }
 
 function calcRBY(stat: StatName, base: number, dv: number, ev: number, level: number) {
