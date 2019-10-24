@@ -1,0 +1,3 @@
+[submodule "vendor/Pokemon-Showdown"]
+	path = vendor/Pokemon-Showdown
+	url = git://github.com/monsanto/Pokemon-Showdown.git

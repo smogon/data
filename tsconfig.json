@@ -1,9 +1,10 @@
 {
   "extends": "./node_modules/gts/tsconfig-google.json",
-  "exclude": ["build"],
+  "exclude": ["build", "vendor"],
   "compilerOptions": {
     "incremental": true,
     "esModuleInterop": true,
-    "outDir": "./build"
+    "outDir": "./build",
+    "pretty": null,
   }
 }
