@@ -16,5 +16,6 @@ const data = psImport(psDataDir);
 
 for (const gen of GENERATIONS) {
   const genData = data.gens[gen];
+  fs.mkdirSync(exportDir, { recursive: true });
   fs.writeFileSync(path.join(exportDir, `${gen}.json`), detStringify(genData, { space: '  ' }));
 }
