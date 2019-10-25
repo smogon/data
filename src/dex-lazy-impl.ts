@@ -2,11 +2,9 @@ import * as I from './dex-interfaces';
 
 class Transformer<Src, Dest> implements I.Store<Dest> {
   constructor(
-    _source: Src[],
-    _fn: (dv: Src) => Dest,
-    private source = _source,
-    private fn = _fn,
-    private cache = new Array(_source.length)
+    private source: Src[],
+    private fn: (dv: Src) => Dest,
+    private cache = new Array(source.length)
   ) {}
 
   get(id: number) {
@@ -66,9 +64,8 @@ class Generation implements I.Generation {
 
 class Species implements I.Species {
   constructor(
-    _gen: Generation,
+    public gen: Generation,
     specie: I.PlainSpecies,
-    public gen = _gen,
     public name = specie.name,
     private _prevo = specie.prevo,
     private _evos = specie.evos
