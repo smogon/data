@@ -83,14 +83,14 @@ const NATURES: Readonly<{ [id: string]: Nature }> = {
   timid: new NatureImpl('Timid', { plus: 'spe', minus: 'atk' }),
 };
 
-export const Natures = {
+export const Natures = new (class {
   get(id: ID): Nature | undefined {
     return NATURES[id];
-  },
+  }
 
   *[Symbol.iterator](): IterableIterator<Nature> {
     for (const id in NATURES) {
       yield NATURES[id];
     }
-  },
-};
+  }
+})();
