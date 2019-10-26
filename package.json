@@ -37,6 +37,6 @@
     "posttest": "npm run lint",
     "build": "tsc && tslint --project . -c tslint-semantic.json",
     "fullbuild": "npm run compile && npm run lint",
-    "import": "node build/tools/convert-ps-data.js vendor/Pokemon-Showdown build/data"
+    "import": "node build/tools/convert-ps-data.js vendor/Pokemon-Showdown/data build/data"
   }
 }

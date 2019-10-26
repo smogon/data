@@ -19,11 +19,9 @@ type PSDex = Record<GenerationNumber, Record<DataKind, IDMap>>;
 // Loading
 ////////////////////////////////////////////////////////////////////////////////
 
-function requireMap(psDir: string, gen: GenerationNumber, name: string, key?: string): IDMap {
-  const dirComponents = [process.cwd(), psDir];
-  if (gen === 7) {
-    dirComponents.push(`data`);
-  } else {
+function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?: string): IDMap {
+  const dirComponents = [process.cwd(), psDataDir];
+  if (gen !== 7) {
     dirComponents.push('mods', `gen${gen}`);
   }
 
@@ -32,7 +30,7 @@ function requireMap(psDir: string, gen: GenerationNumber, name: string, key?: st
   // least see if the directory exists.
 
   if (!fs.existsSync(dir)) {
-    throw new Error(`Directory ${psDir} doesn't exist`);
+    throw new Error(`Directory ${psDataDir} doesn't exist`);
   }
 
   const filename = path.join(dir, name);
@@ -62,11 +60,14 @@ function mergeMap(map1: IDMap, map2: IDMap) {
   return map1;
 }
 
-function requirePSDex(psDir: string) {
+function requirePSDex(psDataDir: string) {
   const dex = {} as PSDex;
   for (const gen of GENERATIONS) {
     dex[gen] = {
-      species: mergeMap(requireMap(psDir, gen, 'pokedex'), requireMap(psDir, gen, 'formats-data')),
+      species: mergeMap(
+        requireMap(psDataDir, gen, 'pokedex'),
+        requireMap(psDataDir, gen, 'formats-data')
+      ),
     };
   }
 
@@ -116,28 +117,28 @@ function isMega(s: any) {
   return ['Mega', 'Mega-X', 'Mega-Y', 'Primal'].includes(s.forme);
 }
 
-function isAlola(s: any) {
-  return s.forme !== undefined && s.forme.startsWith('Alola');
+function isAlolaOrStarter(s: any) {
+  return s.forme !== undefined && (s.forme.startsWith('Alola') || s.forme === 'Starter');
 }
 
 const PREDS = {
   1: {
-    species: (s: any) => 1 <= s.num && s.num <= 151 && !isMega(s) && !isAlola(s),
+    species: (s: any) => 1 <= s.num && s.num <= 151 && !isMega(s) && !isAlolaOrStarter(s),
   },
   2: {
-    species: (s: any) => 1 <= s.num && s.num <= 251 && !isMega(s) && !isAlola(s),
+    species: (s: any) => 1 <= s.num && s.num <= 251 && !isMega(s) && !isAlolaOrStarter(s),
   },
   3: {
-    species: (s: any) => 1 <= s.num && s.num <= 386 && !isMega(s) && !isAlola(s),
+    species: (s: any) => 1 <= s.num && s.num <= 386 && !isMega(s) && !isAlolaOrStarter(s),
   },
   4: {
-    species: (s: any) => 1 <= s.num && s.num <= 493 && !isMega(s) && !isAlola(s),
+    species: (s: any) => 1 <= s.num && s.num <= 493 && !isMega(s) && !isAlolaOrStarter(s),
   },
   5: {
-    species: (s: any) => 1 <= s.num && s.num <= 649 && !isMega(s) && !isAlola(s),
+    species: (s: any) => 1 <= s.num && s.num <= 649 && !isMega(s) && !isAlolaOrStarter(s),
   },
   6: {
-    species: (s: any) => 1 <= s.num && s.num <= 721 && !isAlola(s),
+    species: (s: any) => 1 <= s.num && s.num <= 721 && !isAlolaOrStarter(s),
   },
   7: {
     species: (s: any) => 1 <= s.num,
@@ -216,8 +217,8 @@ function transformPSDex(dexIn: PSDex): Dex.PlainDex {
 // Putting it all together...
 ////////////////////////////////////////////////////////////////////////////////
 
-export default function(psDir: string): Dex.PlainDex {
-  const dexIn = requirePSDex(psDir);
+export default function(psDataDir: string): Dex.PlainDex {
+  const dexIn = requirePSDex(psDataDir);
   inheritPSDex(dexIn);
   filterPSDex(dexIn);
   const dexOut = transformPSDex(dexIn);
