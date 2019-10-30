@@ -11,6 +11,8 @@
       }
     },
     "switch-default": false,
-    "variable-name": false
+    "variable-name": false,
+    "no-default-export": false,
+    "ban-ts-ignore": false
   }
 }

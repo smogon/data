@@ -22,6 +22,7 @@
     "@types/jest": "^24.0.19",
     "gts": "^1.1.0",
     "jest": "^24.9.0",
+    "json-stringify-deterministic": "^1.0.1",
     "source-map-support": "^0.5.13",
     "ts-jest": "^24.1.0",
     "typescript": "^3.6.4"
@@ -35,6 +36,7 @@
     "pretest": "npm run compile",
     "posttest": "npm run lint",
     "build": "tsc && tslint --project . -c tslint-semantic.json",
-    "fullbuild": "npm run compile && npm run lint"
+    "fullbuild": "npm run compile && npm run lint",
+    "import": "node build/tools/convert-ps-data.js vendor/Pokemon-Showdown/data build/data"
   }
 }
