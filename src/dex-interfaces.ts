@@ -1,46 +1,31 @@
 import { GenerationNumber } from './gens';
 
-// Plain interface
-
-export interface PlainDex {
-  gens: PlainGeneration[];
-}
-
-export interface PlainGeneration {
-  num: GenerationNumber;
-  species: PlainSpecies[];
-}
-
-export interface PlainGameObject {
-  name: string;
-}
-
-export interface PlainSpecies extends PlainGameObject {
-  prevo: number | null;
-  evos: number[];
-}
-
-// Rich interface
-
 export interface Store<T> {
   [Symbol.iterator](): Iterator<T>;
 }
 
-export interface Dex {
-  gens: Store<Generation>;
+type Format = 'Plain' | 'Rich';
+
+type Ref<K extends Format, T> = { Plain: number; Rich: T }[K];
+// Can't use { Plain: undefined, Rich: T }, because that requires the key be present in the record. Instead, intersect this record.
+type Backref<K extends Format, Prop extends string, T> = {
+  Plain: {};
+  Rich: Record<Prop, T>;
+}[K];
+type Collection<K extends Format, T> = { Plain: T[]; Rich: Store<T> }[K];
+
+export interface Dex<K extends Format> {
+  gens: Collection<K, Generation<K>>;
 }
 
-export interface Generation {
+export interface Generation<K extends Format> {
   num: GenerationNumber;
-  species: Store<Species>;
+  species: Collection<K, Species<K>>;
 }
 
-export interface GameObject {
-  gen: Generation;
-  name: string;
-}
+export type GameObject<K extends Format> = { name: string } & Backref<K, 'gen', Generation<K>>;
 
-export interface Species extends GameObject {
-  prevo: Species | null;
-  evos: Species[];
-}
+export type Species<K extends Format> = {
+  prevo: Ref<K, Species<K>> | null;
+  evos: Array<Ref<K, Species<K>>>;
+} & GameObject<K>;

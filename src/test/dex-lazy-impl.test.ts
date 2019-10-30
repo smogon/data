@@ -2,7 +2,7 @@ import * as I from '../dex-interfaces';
 import Dex from '../dex-lazy-impl';
 
 describe('lazy impl', () => {
-  const dexSrc: I.PlainDex = {
+  const dexSrc: I.Dex<'Plain'> = {
     gens: [
       {
         num: 1,

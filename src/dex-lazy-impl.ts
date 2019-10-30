@@ -44,28 +44,28 @@ class Transformer<Src, Dest> implements I.Store<Dest> {
   }
 }
 
-export default class Dex implements I.Dex {
+export default class Dex implements I.Dex<'Rich'> {
   constructor(
-    _source: I.PlainDex,
-    public gens = new Transformer(_source.gens, (gen: I.PlainGeneration) => new Generation(gen))
+    _source: I.Dex<'Plain'>,
+    public gens = new Transformer(_source.gens, (gen: I.Generation<'Plain'>) => new Generation(gen))
   ) {}
 }
 
-class Generation implements I.Generation {
+class Generation implements I.Generation<'Rich'> {
   constructor(
-    _source: I.PlainGeneration,
+    _source: I.Generation<'Plain'>,
     public num = _source.num,
     public species = new Transformer(
       _source.species,
-      (specie: I.PlainSpecies) => new Species(this, specie)
+      (specie: I.Species<'Plain'>) => new Species(this, specie)
     )
   ) {}
 }
 
-class Species implements I.Species {
+class Species implements I.Species<'Rich'> {
   constructor(
     public gen: Generation,
-    specie: I.PlainSpecies,
+    specie: I.Species<'Plain'>,
     public name = specie.name,
     private _prevo = specie.prevo,
     private _evos = specie.evos
