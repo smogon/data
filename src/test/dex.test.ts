@@ -1,8 +1,21 @@
-import * as I from '../dex-interfaces';
-import Dex from '../dex-lazy-impl';
+import { load, Dex, GenerationNumber } from '../index';
+
+function head<T>(iter: Iterator<T>) {
+  const v = iter.next();
+  if (v.done === true) {
+    throw new Error('empty iterator');
+  }
+  return v.value;
+}
 
 describe('lazy impl', () => {
-  const dexSrc: I.Dex<'Plain'> = {
+  const dexSrc: Dex<
+    'Plain',
+    {
+      gens: { num: GenerationNumber };
+      species: { name: string; prevo: 'present'; evos: 'present' };
+    }
+  > = {
     gens: [
       {
         num: 1,
@@ -27,11 +40,11 @@ describe('lazy impl', () => {
     ],
   };
 
-  const dex = new Dex(dexSrc);
+  const dex = load(dexSrc);
 
   test('resolves', () => {
-    const gen1 = dex.gens[Symbol.iterator]().next().value;
-    const specie = gen1.species[Symbol.iterator]().next().value;
+    const gen1 = head(dex.gens[Symbol.iterator]());
+    const specie = head(gen1.species[Symbol.iterator]());
     expect(specie.name).toBe('Charmander');
     expect(specie.prevo).toBe(null);
     expect(specie.evos[0].name).toBe('Charmeleon');

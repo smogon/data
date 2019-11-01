@@ -163,8 +163,13 @@ function filterPSDex(dex: PSDex) {
 // Species
 ////////////////////////////////////////////////////////////////////////////////
 
-function transformSpecies(speciesIn: IDMap): Array<Dex.Species<'Plain'>> {
-  const speciesOut: Array<Dex.Species<'Plain'>> = [];
+type PSExt = {
+  gens: { num: GenerationNumber };
+  species: { name: string; prevo: 'present'; evos: 'present' };
+};
+
+function transformSpecies(speciesIn: IDMap): Array<Dex.Species<'Plain', PSExt>> {
+  const speciesOut: Array<Dex.Species<'Plain', PSExt>> = [];
   const speciesMap: Map<string, number> = new Map();
 
   let i = 0;
@@ -174,7 +179,7 @@ function transformSpecies(speciesIn: IDMap): Array<Dex.Species<'Plain'>> {
   }
 
   for (const [id, specieIn] of Object.entries(speciesIn)) {
-    const specieOut: Dex.Species<'Plain'> = {
+    const specieOut: Dex.Species<'Plain', PSExt> = {
       name: specieIn.species,
       prevo: null,
       evos: [],
@@ -200,11 +205,11 @@ function transformSpecies(speciesIn: IDMap): Array<Dex.Species<'Plain'>> {
   return speciesOut;
 }
 
-function transformPSDex(dexIn: PSDex): Dex.Dex<'Plain'> {
-  const dexOut: Dex.Dex<'Plain'> = { gens: [] };
+function transformPSDex(dexIn: PSDex): Dex.Dex<'Plain', PSExt> {
+  const dexOut: Dex.Dex<'Plain', PSExt> = { gens: [] };
   for (const gen of GENERATIONS) {
     const genIn = dexIn[gen];
-    const genOut = {
+    const genOut: Dex.Generation<'Plain', PSExt> = {
       num: gen,
       species: transformSpecies(genIn.species),
     };
@@ -217,7 +222,7 @@ function transformPSDex(dexIn: PSDex): Dex.Dex<'Plain'> {
 // Putting it all together...
 ////////////////////////////////////////////////////////////////////////////////
 
-export default function(psDataDir: string): Dex.Dex<'Plain'> {
+export default function(psDataDir: string): Dex.Dex<'Plain', PSExt> {
   const dexIn = requirePSDex(psDataDir);
   inheritPSDex(dexIn);
   filterPSDex(dexIn);

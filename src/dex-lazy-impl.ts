@@ -4,7 +4,7 @@ class Transformer<Src, Dest> implements I.Store<Dest> {
   constructor(
     private source: Src[],
     private fn: (dv: Src) => Dest,
-    private cache = new Array(source.length)
+    private cache: Dest[] = new Array(source.length)
   ) {}
 
   get(id: number) {
@@ -15,7 +15,7 @@ class Transformer<Src, Dest> implements I.Store<Dest> {
 
     const dv = this.source[id];
     if (dv === undefined) {
-      return undefined;
+      throw new Error(`Cannot resolve ${id}`);
     }
 
     v = this.fn(dv);
@@ -23,60 +23,79 @@ class Transformer<Src, Dest> implements I.Store<Dest> {
     return v;
   }
 
-  resolve(id: number): Dest {
-    const v = this.get(id);
-    if (v === undefined) {
-      throw new Error('Cannot resolve');
-    }
-    return v;
-  }
-
   *[Symbol.iterator]() {
     for (let i = 0; i < this.source.length; i++) {
-      let v = this.cache[i];
-      if (v === undefined) {
-        const dv = this.source[i];
-        v = this.fn(dv);
-        this.cache[i] = v;
-      }
-      yield v;
+      yield this.get(i);
     }
   }
 }
 
-export default class Dex implements I.Dex<'Rich'> {
+export default class Dex<Ext extends I.ExtSpec> {
   constructor(
-    _source: I.Dex<'Plain'>,
-    public gens = new Transformer(_source.gens, (gen: I.Generation<'Plain'>) => new Generation(gen))
-  ) {}
-}
-
-class Generation implements I.Generation<'Rich'> {
-  constructor(
-    _source: I.Generation<'Plain'>,
-    public num = _source.num,
-    public species = new Transformer(
-      _source.species,
-      (specie: I.Species<'Plain'>) => new Species(this, specie)
+    dex: I.Dex<'Plain', Ext>,
+    public gens = new Transformer(
+      dex.gens,
+      (gen: I.Generation<'Plain', Ext>) => new Generation(gen)
     )
   ) {}
 }
 
-class Species implements I.Species<'Rich'> {
+class Generation<Ext extends I.ExtSpec> {
+  [k: string]: unknown;
+
   constructor(
-    public gen: Generation,
-    specie: I.Species<'Plain'>,
-    public name = specie.name,
-    private _prevo = specie.prevo,
-    private _evos = specie.evos
-  ) {}
+    gen: any,
+    public species: Transformer<I.Species<'Plain', Ext>, Species<Ext>> = new Transformer(
+      gen.species,
+      (specie: I.Species<'Plain', Ext>) => new Species(this, specie)
+    )
+  ) {
+    for (const k in gen) {
+      switch (k) {
+        case 'species':
+          break;
+        default:
+          this[k] = gen[k];
+          break;
+      }
+    }
+  }
+}
+
+const prevoSym = Symbol();
+const evosSym = Symbol();
+
+class Species<Ext extends I.ExtSpec> {
+  private [prevoSym]: number | null | undefined;
+  private [evosSym]: number[] | undefined;
+  [k: string]: unknown;
+
+  constructor(public gen: Generation<Ext>, specie: any) {
+    for (const k in specie) {
+      switch (k) {
+        case 'prevo':
+          this[prevoSym] = specie.prevo;
+          break;
+        case 'evos':
+          this[evosSym] = specie.evos;
+          break;
+        default:
+          this[k] = specie[k];
+          break;
+      }
+    }
+  }
 
   get prevo() {
-    if (this._prevo === null) return null;
-    return this.gen.species.resolve(this._prevo);
+    const v = this[prevoSym];
+    if (v === undefined) throw new Error('prevo not loaded yet');
+    if (v === null) return null;
+    return this.gen.species.get(v);
   }
 
   get evos() {
-    return this._evos.map(id => this.gen.species.resolve(id));
+    const v = this[evosSym];
+    if (v === undefined) throw new Error('evos not loaded yet');
+    return v.map(id => this.gen.species.get(id));
   }
 }
