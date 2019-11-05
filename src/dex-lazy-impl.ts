@@ -46,14 +46,19 @@ class Generation<Ext extends I.ExtSpec> {
   constructor(
     gen: any,
     // Must always be defined for now; decide what to do later
-    public species: Transformer<I.Species<'Plain', Ext>, Species<Ext>> = new Transformer(
+    public species: Transformer<any, any> = new Transformer(
       gen.species !== undefined ? gen.species : [],
-      (specie: I.Species<'Plain', Ext>) => new Species(this, specie)
+      (specie: any) => new Species(this, specie)
+    ),
+    public abilities: Transformer<any, any> = new Transformer(
+      gen.abilities !== undefined ? gen.abilities : [],
+      (ability: any) => new Ability(this, ability)
     )
   ) {
     for (const k in gen) {
       switch (k) {
         case 'species':
+        case 'abilities':
           break;
         default:
           this[k] = gen[k];
@@ -65,10 +70,12 @@ class Generation<Ext extends I.ExtSpec> {
 
 const prevoSym = Symbol();
 const evosSym = Symbol();
+const abilitiesSym = Symbol();
 
 class Species<Ext extends I.ExtSpec> {
   private [prevoSym]: number | null | undefined;
   private [evosSym]: number[] | undefined;
+  private [abilitiesSym]: number[] | undefined;
   [k: string]: unknown;
 
   constructor(public gen: Generation<Ext>, specie: any) {
@@ -79,6 +86,9 @@ class Species<Ext extends I.ExtSpec> {
           break;
         case 'evos':
           this[evosSym] = specie.evos;
+          break;
+        case 'abilities':
+          this[abilitiesSym] = specie.abilities;
           break;
         default:
           this[k] = specie[k];
@@ -98,5 +108,25 @@ class Species<Ext extends I.ExtSpec> {
     const v = this[evosSym];
     if (v === undefined) throw new Error('evos not loaded yet');
     return v.map(id => this.gen.species.get(id));
+  }
+
+  get abilities() {
+    const v = this[abilitiesSym];
+    if (v === undefined) throw new Error('evos not loaded yet');
+    return v.map(id => this.gen.abilities.get(id));
+  }
+}
+
+class Ability<Ext extends I.ExtSpec> {
+  [k: string]: unknown;
+
+  constructor(public gen: Generation<Ext>, ability: any) {
+    for (const k in ability) {
+      switch (k) {
+        default:
+          this[k] = ability[k];
+          break;
+      }
+    }
   }
 }
