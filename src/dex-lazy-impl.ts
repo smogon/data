@@ -45,8 +45,9 @@ class Generation<Ext extends I.ExtSpec> {
 
   constructor(
     gen: any,
+    // Must always be defined for now; decide what to do later
     public species: Transformer<I.Species<'Plain', Ext>, Species<Ext>> = new Transformer(
-      gen.species,
+      gen.species !== undefined ? gen.species : [],
       (specie: I.Species<'Plain', Ext>) => new Species(this, specie)
     )
   ) {

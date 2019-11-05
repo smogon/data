@@ -44,9 +44,14 @@ export interface Dex<K extends Format, Ext extends ExtSpec = {}> {
   gens: Collection<K, Generation<K, Ext>>;
 }
 
-export type Generation<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'gens'> & {
-  species: Collection<K, Species<K, Ext>>;
-};
+export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
+  ExtField<Ext, 'gens'>,
+  'species'
+> &
+  // Inline call to OverrideField ;
+  (ExtField<Ext, 'gens'> extends { species: 'present' }
+    ? { species: Collection<K, Species<K, Ext>> }
+    : {});
 
 export type GameObject<K extends Format, Ext extends ExtSpec = {}> = Backref<
   K,

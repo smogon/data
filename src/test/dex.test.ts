@@ -12,7 +12,7 @@ describe('lazy impl', () => {
   const dexSrc: Dex<
     'Plain',
     {
-      gens: { num: GenerationNumber };
+      gens: { num: GenerationNumber; species: 'present' };
       species: { name: string; prevo: 'present'; evos: 'present' };
     }
   > = {

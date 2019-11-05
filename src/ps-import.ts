@@ -164,7 +164,7 @@ function filterPSDex(dex: PSDex) {
 ////////////////////////////////////////////////////////////////////////////////
 
 type PSExt = {
-  gens: { num: GenerationNumber };
+  gens: { num: GenerationNumber; species: 'present' };
   species: { name: string; prevo: 'present'; evos: 'present' };
 };
 
