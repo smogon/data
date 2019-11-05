@@ -8,8 +8,8 @@ import * as Dex from './dex-interfaces';
 // Fundamental types
 ////////////////////////////////////////////////////////////////////////////////
 
-type DataKind = 'species';
-const DATAKINDS: Readonly<DataKind[]> = ['species'];
+type DataKind = 'species' | 'abilities';
+const DATAKINDS: Readonly<DataKind[]> = ['species', 'abilities'];
 
 // This is generally an ID map, but in the case of types, it isn't
 type IDMap = Record<string, any>;
@@ -68,6 +68,7 @@ function requirePSDex(psDataDir: string) {
         requireMap(psDataDir, gen, 'pokedex'),
         requireMap(psDataDir, gen, 'formats-data')
       ),
+      abilities: requireMap(psDataDir, gen, 'abilities'),
     };
   }
 
@@ -124,24 +125,31 @@ function isAlolaOrStarter(s: any) {
 const PREDS = {
   1: {
     species: (s: any) => 1 <= s.num && s.num <= 151 && !isMega(s) && !isAlolaOrStarter(s),
+    abilities: (a: any) => false,
   },
   2: {
     species: (s: any) => 1 <= s.num && s.num <= 251 && !isMega(s) && !isAlolaOrStarter(s),
+    abilities: (a: any) => false,
   },
   3: {
     species: (s: any) => 1 <= s.num && s.num <= 386 && !isMega(s) && !isAlolaOrStarter(s),
+    abilities: (a: any) => a.num > 0 && a.num <= 76,
   },
   4: {
     species: (s: any) => 1 <= s.num && s.num <= 493 && !isMega(s) && !isAlolaOrStarter(s),
+    abilities: (a: any) => a.num <= 123,
   },
   5: {
     species: (s: any) => 1 <= s.num && s.num <= 649 && !isMega(s) && !isAlolaOrStarter(s),
+    abilities: (a: any) => a.num <= 164,
   },
   6: {
     species: (s: any) => 1 <= s.num && s.num <= 721 && !isAlolaOrStarter(s),
+    abilities: (a: any) => a.num <= 191,
   },
   7: {
     species: (s: any) => 1 <= s.num,
+    abilities: (a: any) => true,
   },
 };
 
@@ -163,39 +171,59 @@ function filterPSDex(dex: PSDex) {
 // Species
 ////////////////////////////////////////////////////////////////////////////////
 
+// Kinda similar name to IDMap, might want to call this something else, idk
+type DexMap = Record<DataKind, Map<string, number>>;
+
+function makeMap(dex: Record<DataKind, IDMap>) {
+  const dexMap: DexMap = {} as DexMap;
+
+  for (const k of DATAKINDS) {
+    dexMap[k] = new Map();
+    let i = 0;
+    for (const id in dex[k]) {
+      dexMap[k].set(id, i);
+      i++;
+    }
+  }
+
+  return dexMap;
+}
+
 type PSExt = {
-  gens: { num: GenerationNumber; species: 'present' };
-  species: { name: string; prevo: 'present'; evos: 'present' };
+  gens: { num: GenerationNumber; species: 'present'; abilities: 'present' };
+  species: { name: string; prevo: 'present'; evos: 'present'; abilities: 'present' };
+  abilities: { name: string };
 };
 
-function transformSpecies(speciesIn: IDMap): Array<Dex.Species<'Plain', PSExt>> {
+function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'Plain', PSExt>> {
   const speciesOut: Array<Dex.Species<'Plain', PSExt>> = [];
-  const speciesMap: Map<string, number> = new Map();
-
-  let i = 0;
-  for (const id in speciesIn) {
-    speciesMap.set(id, i);
-    i++;
-  }
 
   for (const [id, specieIn] of Object.entries(speciesIn)) {
     const specieOut: Dex.Species<'Plain', PSExt> = {
       name: specieIn.species,
       prevo: null,
       evos: [],
+      abilities: [],
     };
 
-    const prevoId = speciesMap.get(specieIn.prevo);
+    const prevoId = dexMap.species.get(specieIn.prevo);
     if (prevoId !== undefined) {
       specieOut.prevo = prevoId;
     }
 
     if (specieIn.evos !== undefined) {
       for (const evo of specieIn.evos) {
-        const evoId = speciesMap.get(evo);
+        const evoId = dexMap.species.get(evo);
         if (evoId !== undefined) {
           specieOut.evos.push(evoId);
         }
+      }
+    }
+
+    for (const ability of Object.values(specieIn.abilities)) {
+      const abilityId = dexMap.abilities.get(toID(ability as string));
+      if (abilityId !== undefined) {
+        specieOut.abilities.push(abilityId);
       }
     }
 
@@ -205,13 +233,32 @@ function transformSpecies(speciesIn: IDMap): Array<Dex.Species<'Plain', PSExt>> 
   return speciesOut;
 }
 
+function transformAbilities(
+  dexMap: DexMap,
+  abilitiesIn: IDMap
+): Array<Dex.Ability<'Plain', PSExt>> {
+  const abilitiesOut: Array<Dex.Ability<'Plain', PSExt>> = [];
+
+  for (const [id, abilityIn] of Object.entries(abilitiesIn)) {
+    const abilityOut: Dex.Ability<'Plain', PSExt> = {
+      name: abilityIn.name,
+    };
+
+    abilitiesOut.push(abilityOut);
+  }
+
+  return abilitiesOut;
+}
+
 function transformPSDex(dexIn: PSDex): Dex.Dex<'Plain', PSExt> {
   const dexOut: Dex.Dex<'Plain', PSExt> = { gens: [] };
   for (const gen of GENERATIONS) {
     const genIn = dexIn[gen];
+    const genMap = makeMap(genIn);
     const genOut: Dex.Generation<'Plain', PSExt> = {
       num: gen,
-      species: transformSpecies(genIn.species),
+      species: transformSpecies(genMap, genIn.species),
+      abilities: transformAbilities(genMap, genIn.abilities),
     };
     dexOut.gens[gen] = genOut;
   }
