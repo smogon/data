@@ -54,7 +54,7 @@ function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?
 
 function mergeMap(map1: IDMap, map2: IDMap) {
   for (const id in map2) {
-    if (map1[id] === undefined) map1[id] = {};
+    if (map1[id] === undefined) map1[id] = { inherit: true };
     Object.assign(map1[id], map2[id]);
   }
   return map1;

@@ -6,4 +6,8 @@ describe('ps-import', () => {
   test('rby has the original 151', () => {
     expect(data.gens[1].species.length).toBe(151);
   });
+
+  test('gsc has 251 pokemon', () => {
+    expect(data.gens[2].species.length).toBe(251);
+  });
 });
