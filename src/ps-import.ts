@@ -194,7 +194,7 @@ function transformSpecies(speciesIn: IDMap): Array<Dex.Species<'Plain', PSExt>> 
       for (const evo of specieIn.evos) {
         const evoId = speciesMap.get(evo);
         if (evoId !== undefined) {
-          specieOut.evos.push(evo.species);
+          specieOut.evos.push(evoId);
         }
       }
     }
