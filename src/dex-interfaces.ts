@@ -21,6 +21,9 @@ export type ExtSpec = {
   abilities?: {
     [k: string]: unknown;
   };
+  items?: {
+    [k: string]: unknown;
+  };
 };
 
 // Array may be empty if no fields.
@@ -50,7 +53,7 @@ export interface Dex<K extends Format, Ext extends ExtSpec = {}> {
 
 export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'gens'>,
-  'species' | 'abilities'
+  'species' | 'abilities' | 'items'
 > &
   // Inline call to OverrideField ;
   (ExtField<Ext, 'gens'> extends { species: 'present' }
@@ -58,6 +61,9 @@ export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
     : {}) &
   (ExtField<Ext, 'gens'> extends { abilities: 'present' }
     ? { abilities: Collection<K, Ability<K, Ext>> }
+    : {}) &
+  (ExtField<Ext, 'gens'> extends { items: 'present' }
+    ? { items: Collection<K, Item<K, Ext>> }
     : {});
 
 export type GameObject<K extends Format, Ext extends ExtSpec = {}> = Backref<
@@ -83,4 +89,7 @@ export type Species<K extends Format, Ext extends ExtSpec = {}> = Omit<
     : {});
 
 export type Ability<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'abilities'> &
+  GameObject<K, Ext>;
+
+export type Item<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'items'> &
   GameObject<K, Ext>;

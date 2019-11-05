@@ -53,12 +53,17 @@ class Generation<Ext extends I.ExtSpec> {
     public abilities: Transformer<any, any> = new Transformer(
       gen.abilities !== undefined ? gen.abilities : [],
       (ability: any) => new Ability(this, ability)
+    ),
+    public items: Transformer<any, any> = new Transformer(
+      gen.items !== undefined ? gen.items : [],
+      (item: any) => new Item(this, item)
     )
   ) {
     for (const k in gen) {
       switch (k) {
         case 'species':
         case 'abilities':
+        case 'items':
           break;
         default:
           this[k] = gen[k];
@@ -125,6 +130,20 @@ class Ability<Ext extends I.ExtSpec> {
       switch (k) {
         default:
           this[k] = ability[k];
+          break;
+      }
+    }
+  }
+}
+
+class Item<Ext extends I.ExtSpec> {
+  [k: string]: unknown;
+
+  constructor(public gen: Generation<Ext>, item: any) {
+    for (const k in item) {
+      switch (k) {
+        default:
+          this[k] = item[k];
           break;
       }
     }
