@@ -19,4 +19,11 @@ describe('ps-import', () => {
     expect(data.gens[2].items.find(x => x.name === 'Berserk Gene')).toBeDefined();
     expect(data.gens[3].items.find(x => x.name === 'Berserk Gene')).toBeUndefined();
   });
+
+  test('JSON roundtrippable', () => {
+    // TODO: compare top-level too
+    for (const gen of Object.values(data.gens)) {
+      expect(gen).toStrictEqual(JSON.parse(JSON.stringify(gen)));
+    }
+  });
 });
