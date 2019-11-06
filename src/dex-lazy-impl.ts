@@ -57,6 +57,10 @@ class Generation<Ext extends I.ExtSpec> {
     public items: Transformer<any, any> = new Transformer(
       gen.items !== undefined ? gen.items : [],
       (item: any) => new Item(this, item)
+    ),
+    public moves: Transformer<any, any> = new Transformer(
+      gen.moves !== undefined ? gen.moves : [],
+      (move: any) => new Move(this, move)
     )
   ) {
     for (const k in gen) {
@@ -64,6 +68,7 @@ class Generation<Ext extends I.ExtSpec> {
         case 'species':
         case 'abilities':
         case 'items':
+        case 'moves':
           break;
         default:
           this[k] = gen[k];
@@ -144,6 +149,20 @@ class Item<Ext extends I.ExtSpec> {
       switch (k) {
         default:
           this[k] = item[k];
+          break;
+      }
+    }
+  }
+}
+
+class Move<Ext extends I.ExtSpec> {
+  [k: string]: unknown;
+
+  constructor(public gen: Generation<Ext>, move: any) {
+    for (const k in move) {
+      switch (k) {
+        default:
+          this[k] = move[k];
           break;
       }
     }
