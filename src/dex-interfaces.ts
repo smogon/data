@@ -25,6 +25,7 @@ export type ExtSpec = {
     [k: string]: unknown;
   };
   moves?: {
+    type?: 'present';
     [k: string]: unknown;
   };
   types?: {
@@ -96,8 +97,12 @@ export type Ability<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 
 export type Item<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'items'> &
   GameObject<K, Ext>;
 
-export type Move<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'moves'> &
-  GameObject<K, Ext>;
+export type Move<K extends Format, Ext extends ExtSpec = {}> = Omit<
+  ExtField<Ext, 'moves'>,
+  'type'
+> &
+  GameObject<K, Ext> &
+  RichField<Ext, 'moves', { type: Ref<K, Type<K, Ext>> }>;
 
 export type Type<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'types'> &
   GameObject<K, Ext>;

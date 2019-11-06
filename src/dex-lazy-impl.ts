@@ -171,17 +171,29 @@ class Item<Ext extends I.ExtSpec> {
   }
 }
 
+const typeSym = Symbol();
+
 class Move<Ext extends I.ExtSpec> {
+  private [typeSym]: number | undefined;
   [k: string]: unknown;
 
   constructor(public gen: Generation<Ext>, move: any) {
     for (const k in move) {
       switch (k) {
+        case 'type':
+          this[typeSym] = move.type;
+          break;
         default:
           this[k] = move[k];
           break;
       }
     }
+  }
+
+  get type() {
+    const v = this[typeSym];
+    if (v === undefined) throw new Error('type not loaded yet');
+    return this.gen.types.get(v);
   }
 }
 

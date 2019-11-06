@@ -240,7 +240,7 @@ type PSExt = {
   };
   abilities: { name: string; shortDesc: string; desc: string };
   items: { name: string; shortDesc: string; desc: string };
-  moves: { name: string; shortDesc: string; desc: string };
+  moves: { name: string; shortDesc: string; desc: string; type: 'present' };
   types: { name: string };
 };
 
@@ -330,8 +330,13 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
   const movesOut: Array<Dex.Move<'Plain', PSExt>> = [];
 
   for (const [id, moveIn] of Object.entries(movesIn)) {
+    // TODO, add to old gen typechart?
+    if (moveIn.type === '???') {
+      moveIn.type = 'Normal';
+    }
     const moveOut: Dex.Move<'Plain', PSExt> = {
       name: moveIn.name,
+      type: dexMap.types.get(moveIn.type) as number,
       shortDesc: nullCoalesce(moveIn.shortDesc, moveIn.desc),
       desc: nullCoalesce(moveIn.desc, moveIn.shortDesc),
     };
