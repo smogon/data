@@ -291,7 +291,6 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
     }
 
     for (const move in specieIn.learnset) {
-      // No toID call here!
       const moveId = dexMap.moves.get(toID(move as string));
       if (moveId !== undefined) {
         specieOut.learnset.push(moveId);
