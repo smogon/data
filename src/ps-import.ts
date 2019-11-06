@@ -66,7 +66,10 @@ function requirePSDex(psDataDir: string) {
     dex[gen] = {
       species: mergeMap(
         requireMap(psDataDir, gen, 'pokedex'),
-        requireMap(psDataDir, gen, 'formats-data')
+        mergeMap(
+          requireMap(psDataDir, gen, 'formats-data'),
+          requireMap(psDataDir, gen, 'learnsets')
+        )
       ),
       abilities: requireMap(psDataDir, gen, 'abilities'),
       items: requireMap(psDataDir, gen, 'items'),
@@ -237,6 +240,7 @@ type PSExt = {
     evos: 'present';
     types: 'present';
     abilities: 'present';
+    learnset: 'present';
   };
   abilities: { name: string; shortDesc: string; desc: string };
   items: { name: string; shortDesc: string; desc: string };
@@ -254,6 +258,7 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
       evos: [],
       abilities: [],
       types: [],
+      learnset: [],
     };
 
     const prevoId = dexMap.species.get(specieIn.prevo);
@@ -282,6 +287,14 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
       const typeId = dexMap.types.get(type);
       if (typeId !== undefined) {
         specieOut.types.push(typeId);
+      }
+    }
+
+    for (const move in specieIn.learnset) {
+      // No toID call here!
+      const moveId = dexMap.moves.get(toID(move as string));
+      if (moveId !== undefined) {
+        specieOut.learnset.push(moveId);
       }
     }
 

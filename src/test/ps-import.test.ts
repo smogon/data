@@ -7,6 +7,14 @@ describe('ps-import', () => {
     expect(data.gens[1].species.length).toBe(151);
   });
 
+  test('rby has a non-empty learnset', () => {
+    let hasNonEmpty = false;
+    for (const specie of data.gens[1].species) {
+      hasNonEmpty = hasNonEmpty || specie.learnset.length > 0;
+    }
+    expect(hasNonEmpty).toBe(true);
+  });
+
   test('gsc has 251 pokemon', () => {
     expect(data.gens[2].species.length).toBe(251);
   });
