@@ -54,7 +54,7 @@ function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?
 
 function mergeMap(map1: IDMap, map2: IDMap) {
   for (const id in map2) {
-    if (map1[id] === undefined) map1[id] = { inherit: true };
+    if (map1[id] === undefined) map1[id] = {};
     Object.assign(map1[id], map2[id]);
   }
   return map1;
@@ -87,12 +87,12 @@ function inheritMap(mapFrom: IDMap, mapTo: IDMap) {
     const objFrom = mapFrom[id];
     let objTo = mapTo[id];
     if (!objTo) {
-      objTo = mapTo[id] = { inherit: true };
+      objTo = mapTo[id] = {};
     }
     if (objTo.inherit) {
       delete objTo.inherit;
-      Object.assign(objTo, { ...objFrom, ...objTo });
     }
+    Object.assign(objTo, { ...objFrom, ...objTo });
   }
 }
 
