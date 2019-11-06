@@ -61,6 +61,10 @@ class Generation<Ext extends I.ExtSpec> {
     public moves: Transformer<any, any> = new Transformer(
       gen.moves !== undefined ? gen.moves : [],
       (move: any) => new Move(this, move)
+    ),
+    public types: Transformer<any, any> = new Transformer(
+      gen.types !== undefined ? gen.types : [],
+      (type: any) => new Type(this, type)
     )
   ) {
     for (const k in gen) {
@@ -69,6 +73,7 @@ class Generation<Ext extends I.ExtSpec> {
         case 'abilities':
         case 'items':
         case 'moves':
+        case 'types':
           break;
         default:
           this[k] = gen[k];
@@ -81,11 +86,13 @@ class Generation<Ext extends I.ExtSpec> {
 const prevoSym = Symbol();
 const evosSym = Symbol();
 const abilitiesSym = Symbol();
+const typesSym = Symbol();
 
 class Species<Ext extends I.ExtSpec> {
   private [prevoSym]: number | null | undefined;
   private [evosSym]: number[] | undefined;
   private [abilitiesSym]: number[] | undefined;
+  private [typesSym]: number[] | undefined;
   [k: string]: unknown;
 
   constructor(public gen: Generation<Ext>, specie: any) {
@@ -99,6 +106,9 @@ class Species<Ext extends I.ExtSpec> {
           break;
         case 'abilities':
           this[abilitiesSym] = specie.abilities;
+          break;
+        case 'types':
+          this[typesSym] = specie.types;
           break;
         default:
           this[k] = specie[k];
@@ -124,6 +134,12 @@ class Species<Ext extends I.ExtSpec> {
     const v = this[abilitiesSym];
     if (v === undefined) throw new Error('evos not loaded yet');
     return v.map(id => this.gen.abilities.get(id));
+  }
+
+  get types() {
+    const v = this[typesSym];
+    if (v === undefined) throw new Error('types not loaded yet');
+    return v.map(id => this.gen.types.get(id));
   }
 }
 
@@ -163,6 +179,20 @@ class Move<Ext extends I.ExtSpec> {
       switch (k) {
         default:
           this[k] = move[k];
+          break;
+      }
+    }
+  }
+}
+
+class Type<Ext extends I.ExtSpec> {
+  [k: string]: unknown;
+
+  constructor(public gen: Generation<Ext>, type: any) {
+    for (const k in type) {
+      switch (k) {
+        default:
+          this[k] = type[k];
           break;
       }
     }

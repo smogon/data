@@ -16,6 +16,7 @@ export type ExtSpec = {
     prevo?: 'present';
     evos?: 'present';
     abilities?: 'present';
+    types?: 'present';
     [k: string]: unknown;
   };
   abilities?: {
@@ -25,6 +26,9 @@ export type ExtSpec = {
     [k: string]: unknown;
   };
   moves?: {
+    [k: string]: unknown;
+  };
+  types?: {
     [k: string]: unknown;
   };
 };
@@ -56,7 +60,7 @@ export interface Dex<K extends Format, Ext extends ExtSpec = {}> {
 
 export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'gens'>,
-  'species' | 'abilities' | 'items' | 'moves'
+  'species' | 'abilities' | 'items' | 'moves' | 'types'
 > &
   // Inline call to OverrideField ;
   (ExtField<Ext, 'gens'> extends { species: 'present' }
@@ -70,6 +74,9 @@ export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
     : {}) &
   (ExtField<Ext, 'gens'> extends { moves: 'present' }
     ? { moves: Collection<K, Move<K, Ext>> }
+    : {}) &
+  (ExtField<Ext, 'gens'> extends { types: 'present' }
+    ? { types: Collection<K, Type<K, Ext>> }
     : {});
 
 export type GameObject<K extends Format, Ext extends ExtSpec = {}> = Backref<
@@ -80,7 +87,7 @@ export type GameObject<K extends Format, Ext extends ExtSpec = {}> = Backref<
 
 export type Species<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'species'>,
-  'prevo' | 'evos' | 'abilities'
+  'prevo' | 'evos' | 'abilities' | 'types'
 > &
   GameObject<K, Ext> &
   // Inline calls to OverrideField to get this to work
@@ -92,6 +99,9 @@ export type Species<K extends Format, Ext extends ExtSpec = {}> = Omit<
     : {}) &
   (ExtField<Ext, 'species'> extends { abilities: 'present' }
     ? { abilities: Array<Ref<K, Ability<K, Ext>>> }
+    : {}) &
+  (ExtField<Ext, 'species'> extends { types: 'present' }
+    ? { types: Array<Ref<K, Type<K, Ext>>> }
     : {});
 
 export type Ability<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'abilities'> &
@@ -101,4 +111,7 @@ export type Item<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'it
   GameObject<K, Ext>;
 
 export type Move<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'moves'> &
+  GameObject<K, Ext>;
+
+export type Type<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'types'> &
   GameObject<K, Ext>;
