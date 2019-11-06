@@ -159,7 +159,7 @@ function filterPSDex(dex: PSDex) {
       const map = dex[gen][k];
       for (const id in dex[gen][k]) {
         const obj = map[id];
-        if ((obj.gen !== undefined && obj.gen !== gen) || !PREDS[gen][k](obj)) {
+        if ((obj.gen !== undefined && gen < obj.gen) || !PREDS[gen][k](obj)) {
           delete map[id];
         }
       }
