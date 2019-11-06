@@ -8,8 +8,8 @@ import * as Dex from './dex-interfaces';
 // Fundamental types
 ////////////////////////////////////////////////////////////////////////////////
 
-type DataKind = 'species' | 'abilities' | 'items' | 'moves';
-const DATAKINDS: Readonly<DataKind[]> = ['species', 'abilities', 'items', 'moves'];
+type DataKind = 'species' | 'abilities' | 'items' | 'moves' | 'types';
+const DATAKINDS: Readonly<DataKind[]> = ['species', 'abilities', 'items', 'moves', 'types'];
 
 // This is generally an ID map, but in the case of types, it isn't
 type IDMap = Record<string, any>;
@@ -71,6 +71,7 @@ function requirePSDex(psDataDir: string) {
       abilities: requireMap(psDataDir, gen, 'abilities'),
       items: requireMap(psDataDir, gen, 'items'),
       moves: requireMap(psDataDir, gen, 'moves'),
+      types: requireMap(psDataDir, gen, 'typechart'),
     };
   }
 
@@ -130,6 +131,7 @@ const PREDS = {
     abilities: (a: any) => false,
     items: (i: any) => false,
     moves: (m: any) => 1 <= m.num && 1 <= m.num && m.num <= 165,
+    types: (t: any) => t !== null,
   },
   2: {
     species: (s: any) => 1 <= s.num && s.num <= 251 && !isMega(s) && !isAlolaOrStarter(s),
@@ -137,36 +139,42 @@ const PREDS = {
     items: (i: any) =>
       0 <= i.num /* Rest should be filtered out by explicit gen. 0 is berserk gene */,
     moves: (m: any) => 1 <= m.num && m.num <= 251,
+    types: (t: any) => t !== null,
   },
   3: {
     species: (s: any) => 1 <= s.num && s.num <= 386 && !isMega(s) && !isAlolaOrStarter(s),
     abilities: (a: any) => 1 <= a.num && a.num <= 76,
     items: (i: any) => i.isNonstandard === undefined && i.num <= 376,
     moves: (m: any) => 1 <= m.num && m.num <= 354,
+    types: (t: any) => t !== null,
   },
   4: {
     species: (s: any) => 1 <= s.num && s.num <= 493 && !isMega(s) && !isAlolaOrStarter(s),
     abilities: (a: any) => 1 <= a.num && a.num <= 123,
     items: (i: any) => i.isNonstandard === undefined && i.num <= 536,
     moves: (m: any) => 1 <= m.num && m.num <= 467,
+    types: (t: any) => t !== null,
   },
   5: {
     species: (s: any) => 1 <= s.num && s.num <= 649 && !isMega(s) && !isAlolaOrStarter(s),
     abilities: (a: any) => 1 <= a.num && a.num <= 164,
     items: (i: any) => i.isNonstandard === undefined && i.num <= 576,
     moves: (m: any) => 1 <= m.num && m.num <= 559,
+    types: (t: any) => t !== null,
   },
   6: {
     species: (s: any) => 1 <= s.num && s.num <= 721 && !isAlolaOrStarter(s),
     abilities: (a: any) => 1 <= a.num && a.num <= 191,
     items: (i: any) => i.isNonstandard === undefined && i.num <= 688,
     moves: (m: any) => 1 <= m.num && m.num <= 621,
+    types: (t: any) => t !== null,
   },
   7: {
     species: (s: any) => 1 <= s.num,
     abilities: (a: any) => 1 <= a.num,
     items: (i: any) => i.isNonstandard === undefined,
     moves: (m: any) => 1 <= m.num,
+    types: (t: any) => true,
   },
 };
 
@@ -213,11 +221,19 @@ type PSExt = {
     abilities: 'present';
     items: 'present';
     moves: 'present';
+    types: 'present';
   };
-  species: { name: string; prevo: 'present'; evos: 'present'; abilities: 'present' };
+  species: {
+    name: string;
+    prevo: 'present';
+    evos: 'present';
+    types: 'present';
+    abilities: 'present';
+  };
   abilities: { name: string };
   items: { name: string };
   moves: { name: string };
+  types: { name: string };
 };
 
 function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'Plain', PSExt>> {
@@ -229,6 +245,7 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
       prevo: null,
       evos: [],
       abilities: [],
+      types: [],
     };
 
     const prevoId = dexMap.species.get(specieIn.prevo);
@@ -249,6 +266,14 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
       const abilityId = dexMap.abilities.get(toID(ability as string));
       if (abilityId !== undefined) {
         specieOut.abilities.push(abilityId);
+      }
+    }
+
+    for (const type of specieIn.types) {
+      // No toID call here!
+      const typeId = dexMap.types.get(type);
+      if (typeId !== undefined) {
+        specieOut.types.push(typeId);
       }
     }
 
@@ -303,6 +328,21 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
   return movesOut;
 }
 
+function transformTypes(dexMap: DexMap, typesIn: IDMap): Array<Dex.Type<'Plain', PSExt>> {
+  const typesOut: Array<Dex.Type<'Plain', PSExt>> = [];
+
+  // Not indexed by ID!
+  for (const [name, typeIn] of Object.entries(typesIn)) {
+    const typeOut: Dex.Type<'Plain', PSExt> = {
+      name,
+    };
+
+    typesOut.push(typeOut);
+  }
+
+  return typesOut;
+}
+
 function transformPSDex(dexIn: PSDex): Dex.Dex<'Plain', PSExt> {
   const dexOut: Dex.Dex<'Plain', PSExt> = { gens: [] };
   for (const gen of GENERATIONS) {
@@ -314,6 +354,7 @@ function transformPSDex(dexIn: PSDex): Dex.Dex<'Plain', PSExt> {
       abilities: transformAbilities(genMap, genIn.abilities),
       items: transformItems(genMap, genIn.items),
       moves: transformMoves(genMap, genIn.moves),
+      types: transformTypes(genMap, genIn.types),
     };
     dexOut.gens[gen] = genOut;
   }
