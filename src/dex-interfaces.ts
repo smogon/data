@@ -4,6 +4,11 @@ import { GenerationNumber } from './gens';
 
 export type ExtSpec = {
   gens?: {
+    species?: 'present';
+    abilities?: 'present';
+    moves?: 'present';
+    items?: 'present';
+    types?: 'present';
     [k: string]: unknown;
   };
   species?: {
