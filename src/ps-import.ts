@@ -214,6 +214,14 @@ function makeMap(dex: Record<DataKind, IDMap>) {
   return dexMap;
 }
 
+// Use ?? when gts supports it
+function nullCoalesce(x: any, y: any) {
+  if (x === undefined || x === null) {
+    return y;
+  }
+  return x;
+}
+
 type PSExt = {
   gens: {
     num: GenerationNumber;
@@ -230,9 +238,9 @@ type PSExt = {
     types: 'present';
     abilities: 'present';
   };
-  abilities: { name: string };
-  items: { name: string };
-  moves: { name: string };
+  abilities: { name: string; shortDesc: string; desc: string };
+  items: { name: string; shortDesc: string; desc: string };
+  moves: { name: string; shortDesc: string; desc: string };
   types: { name: string };
 };
 
@@ -292,6 +300,8 @@ function transformAbilities(
   for (const [id, abilityIn] of Object.entries(abilitiesIn)) {
     const abilityOut: Dex.Ability<'Plain', PSExt> = {
       name: abilityIn.name,
+      shortDesc: nullCoalesce(abilityIn.shortDesc, abilityIn.desc),
+      desc: nullCoalesce(abilityIn.desc, abilityIn.shortDesc),
     };
 
     abilitiesOut.push(abilityOut);
@@ -306,6 +316,8 @@ function transformItems(dexMap: DexMap, itemsIn: IDMap): Array<Dex.Item<'Plain',
   for (const [id, itemIn] of Object.entries(itemsIn)) {
     const itemOut: Dex.Item<'Plain', PSExt> = {
       name: itemIn.name,
+      shortDesc: nullCoalesce(itemIn.shortDesc, itemIn.desc),
+      desc: nullCoalesce(itemIn.desc, itemIn.shortDesc),
     };
 
     itemsOut.push(itemOut);
@@ -320,6 +332,8 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
   for (const [id, moveIn] of Object.entries(movesIn)) {
     const moveOut: Dex.Move<'Plain', PSExt> = {
       name: moveIn.name,
+      shortDesc: nullCoalesce(moveIn.shortDesc, moveIn.desc),
+      desc: nullCoalesce(moveIn.desc, moveIn.shortDesc),
     };
 
     movesOut.push(moveOut);
