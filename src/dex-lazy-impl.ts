@@ -87,12 +87,14 @@ const prevoSym = Symbol();
 const evosSym = Symbol();
 const abilitiesSym = Symbol();
 const typesSym = Symbol();
+const learnsetSym = Symbol();
 
 class Species<Ext extends I.ExtSpec> {
   private [prevoSym]: number | null | undefined;
   private [evosSym]: number[] | undefined;
   private [abilitiesSym]: number[] | undefined;
   private [typesSym]: number[] | undefined;
+  private [learnsetSym]: number[] | undefined;
   [k: string]: unknown;
 
   constructor(public gen: Generation<Ext>, specie: any) {
@@ -109,6 +111,9 @@ class Species<Ext extends I.ExtSpec> {
           break;
         case 'types':
           this[typesSym] = specie.types;
+          break;
+        case 'learnset':
+          this[learnsetSym] = specie.learnset;
           break;
         default:
           this[k] = specie[k];
@@ -140,6 +145,12 @@ class Species<Ext extends I.ExtSpec> {
     const v = this[typesSym];
     if (v === undefined) throw new Error('types not loaded yet');
     return v.map(id => this.gen.types.get(id));
+  }
+
+  get learnset() {
+    const v = this[learnsetSym];
+    if (v === undefined) throw new Error('learnset not loaded yet');
+    return v.map(id => this.gen.moves.get(id));
   }
 }
 

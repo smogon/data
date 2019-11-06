@@ -16,6 +16,7 @@ export type ExtSpec = {
     evos?: 'present';
     abilities?: 'present';
     types?: 'present';
+    learnset?: 'present';
     [k: string]: unknown;
   };
   abilities?: {
@@ -83,13 +84,15 @@ export type GameObject<K extends Format, Ext extends ExtSpec = {}> = Backref<
 
 export type Species<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'species'>,
-  'prevo' | 'evos' | 'abilities' | 'types'
+  'prevo' | 'evos' | 'abilities' | 'types' | 'learnset'
 > &
   GameObject<K, Ext> &
   RichField<Ext, 'species', { prevo: Ref<K, Species<K, Ext>> | null }> &
   RichField<Ext, 'species', { evos: Array<Ref<K, Species<K, Ext>>> }> &
   RichField<Ext, 'species', { abilities: Array<Ref<K, Ability<K, Ext>>> }> &
-  RichField<Ext, 'species', { types: Array<Ref<K, Type<K, Ext>>> }>;
+  RichField<Ext, 'species', { types: Array<Ref<K, Type<K, Ext>>> }> &
+  // TODO: Learnset interface
+  RichField<Ext, 'species', { learnset: Array<Ref<K, Move<K, Ext>>> }>;
 
 export type Ability<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'abilities'> &
   GameObject<K, Ext>;
