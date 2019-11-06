@@ -28,11 +28,11 @@ export type ExtSpec = {
 };
 
 // Array may be empty if no fields.
-export type ExtField<Ext extends ExtSpec, Field extends string> = Ext extends Record<Field, unknown>
+type ExtField<Ext extends ExtSpec, Field extends string> = Ext extends Record<Field, unknown>
   ? Ext[Field]
   : {};
 
-export type RichField<
+type RichField<
   Ext extends ExtSpec,
   Field extends string,
   R extends Record<string, unknown>
@@ -44,7 +44,7 @@ export interface Store<T> {
   [Symbol.iterator](): Iterator<T>;
 }
 
-type Format = 'Plain' | 'Rich';
+export type Format = 'Plain' | 'Rich';
 
 type Ref<K extends Format, T> = { Plain: number; Rich: T }[K];
 // Can't use { Plain: undefined, Rich: T }, because that requires the key be present in the record. Instead, intersect this record.
