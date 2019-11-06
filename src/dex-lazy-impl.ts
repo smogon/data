@@ -132,7 +132,7 @@ class Species<Ext extends I.ExtSpec> {
 
   get abilities() {
     const v = this[abilitiesSym];
-    if (v === undefined) throw new Error('evos not loaded yet');
+    if (v === undefined) throw new Error('abilities not loaded yet');
     return v.map(id => this.gen.abilities.get(id));
   }
 
