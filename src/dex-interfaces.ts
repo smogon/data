@@ -2,12 +2,6 @@ import { GenerationNumber } from './gens';
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// An override field is just something that is 'present', this replaces that
-// field with `T` if 'present' or nothing
-type OverrideField<R, Field extends string, T> = R extends Record<Field, 'present'>
-  ? Record<Field, T>
-  : {};
-
 export type ExtSpec = {
   gens?: {
     [k: string]: unknown;
@@ -38,6 +32,12 @@ export type ExtField<Ext extends ExtSpec, Field extends string> = Ext extends Re
   ? Ext[Field]
   : {};
 
+export type RichField<
+  Ext extends ExtSpec,
+  Field extends string,
+  R extends Record<string, unknown>
+> = ExtField<Ext, Field> extends Record<keyof R, 'present'> ? R : {};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface Store<T> {
@@ -63,21 +63,11 @@ export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   'species' | 'abilities' | 'items' | 'moves' | 'types'
 > &
   // Inline call to OverrideField ;
-  (ExtField<Ext, 'gens'> extends { species: 'present' }
-    ? { species: Collection<K, Species<K, Ext>> }
-    : {}) &
-  (ExtField<Ext, 'gens'> extends { abilities: 'present' }
-    ? { abilities: Collection<K, Ability<K, Ext>> }
-    : {}) &
-  (ExtField<Ext, 'gens'> extends { items: 'present' }
-    ? { items: Collection<K, Item<K, Ext>> }
-    : {}) &
-  (ExtField<Ext, 'gens'> extends { moves: 'present' }
-    ? { moves: Collection<K, Move<K, Ext>> }
-    : {}) &
-  (ExtField<Ext, 'gens'> extends { types: 'present' }
-    ? { types: Collection<K, Type<K, Ext>> }
-    : {});
+  RichField<Ext, 'gens', { species: Collection<K, Species<K, Ext>> }> &
+  RichField<Ext, 'gens', { abilities: Collection<K, Ability<K, Ext>> }> &
+  RichField<Ext, 'gens', { items: Collection<K, Item<K, Ext>> }> &
+  RichField<Ext, 'gens', { moves: Collection<K, Move<K, Ext>> }> &
+  RichField<Ext, 'gens', { types: Collection<K, Type<K, Ext>> }>;
 
 export type GameObject<K extends Format, Ext extends ExtSpec = {}> = Backref<
   K,
@@ -90,19 +80,10 @@ export type Species<K extends Format, Ext extends ExtSpec = {}> = Omit<
   'prevo' | 'evos' | 'abilities' | 'types'
 > &
   GameObject<K, Ext> &
-  // Inline calls to OverrideField to get this to work
-  (ExtField<Ext, 'species'> extends { prevo: 'present' }
-    ? { prevo: Ref<K, Species<K, Ext>> | null }
-    : {}) &
-  (ExtField<Ext, 'species'> extends { evos: 'present' }
-    ? { evos: Array<Ref<K, Species<K, Ext>>> }
-    : {}) &
-  (ExtField<Ext, 'species'> extends { abilities: 'present' }
-    ? { abilities: Array<Ref<K, Ability<K, Ext>>> }
-    : {}) &
-  (ExtField<Ext, 'species'> extends { types: 'present' }
-    ? { types: Array<Ref<K, Type<K, Ext>>> }
-    : {});
+  RichField<Ext, 'species', { prevo: Ref<K, Species<K, Ext>> | null }> &
+  RichField<Ext, 'species', { evos: Array<Ref<K, Species<K, Ext>>> }> &
+  RichField<Ext, 'species', { abilities: Array<Ref<K, Ability<K, Ext>>> }> &
+  RichField<Ext, 'species', { types: Array<Ref<K, Type<K, Ext>>> }>;
 
 export type Ability<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'abilities'> &
   GameObject<K, Ext>;
