@@ -9,8 +9,8 @@ import * as Dex from './dex-interfaces';
 // Fundamental types
 ////////////////////////////////////////////////////////////////////////////////
 
-type DataKind = 'species' | 'abilities' | 'items' | 'moves' | 'types';
-const DATAKINDS: Readonly<DataKind[]> = ['species', 'abilities', 'items', 'moves', 'types'];
+const DATAKINDS = ['species', 'abilities', 'items', 'moves', 'types'] as const;
+type DataKind = (typeof DATAKINDS)[number];
 
 // This is generally an ID map, but in the case of types, it isn't
 type IDMap = Record<string, any>;

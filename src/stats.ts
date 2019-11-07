@@ -1,12 +1,12 @@
 import { GenerationNumber } from './gens';
 import { Nature } from './natures';
 
-export type StatName = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
+const STATS = ['hp', 'atk', 'def', 'spe', 'spa', 'spd'] as const;
+
+export type StatName = (typeof STATS)[number];
 export type StatsTable<T = number> = { [stat in StatName]: T };
 export type BoostName = Exclude<StatName, 'hp'> | 'accuracy' | 'evasion';
 export type BoostsTable<T = number> = { [boost in BoostName]: T };
-
-const STATS: readonly StatName[] = ['hp', 'atk', 'def', 'spe', 'spa', 'spd'];
 
 const NAMES: Readonly<{ [name: string]: StatName }> = {
   HP: 'hp',
