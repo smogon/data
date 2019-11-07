@@ -28,6 +28,16 @@ class Transformer<Src, Dest> {
   }
 }
 
+function assignRemap(remap: Record<string, symbol>, dest: any, src: any) {
+  for (const k in src) {
+    if (k in remap) {
+      dest[remap[k]] = src[k];
+    } else {
+      dest[k] = src[k];
+    }
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export default class Dex {
@@ -138,28 +148,17 @@ class Species extends SpeciesBase {
 
   constructor(gen: Generation, specie: any) {
     super(gen);
-    for (const k in specie) {
-      switch (k) {
-        case 'prevo':
-          this[prevoSym] = specie.prevo;
-          break;
-        case 'evos':
-          this[evosSym] = specie.evos;
-          break;
-        case 'abilities':
-          this[abilitiesSym] = specie.abilities;
-          break;
-        case 'types':
-          this[typesSym] = specie.types;
-          break;
-        case 'learnset':
-          this[learnsetSym] = specie.learnset;
-          break;
-        default:
-          this[k] = specie[k];
-          break;
-      }
-    }
+    assignRemap(
+      {
+        prevo: prevoSym,
+        evos: evosSym,
+        abilities: abilitiesSym,
+        types: typesSym,
+        learnset: learnsetSym,
+      },
+      this,
+      specie
+    );
   }
 }
 
@@ -170,13 +169,7 @@ class Ability extends GenerationalBase {
 
   constructor(gen: Generation, ability: any) {
     super(gen);
-    for (const k in ability) {
-      switch (k) {
-        default:
-          this[k] = ability[k];
-          break;
-      }
-    }
+    assignRemap({}, this, ability);
   }
 }
 
@@ -187,13 +180,7 @@ class Item extends GenerationalBase {
 
   constructor(gen: Generation, item: any) {
     super(gen);
-    for (const k in item) {
-      switch (k) {
-        default:
-          this[k] = item[k];
-          break;
-      }
-    }
+    assignRemap({}, this, item);
   }
 }
 
@@ -216,16 +203,7 @@ class Move extends MoveBase {
 
   constructor(gen: Generation, move: any) {
     super(gen);
-    for (const k in move) {
-      switch (k) {
-        case 'type':
-          this[typeSym] = move.type;
-          break;
-        default:
-          this[k] = move[k];
-          break;
-      }
-    }
+    assignRemap({ type: typeSym }, this, move);
   }
 }
 
@@ -236,12 +214,6 @@ class Type extends GenerationalBase {
 
   constructor(gen: Generation, type: any) {
     super(gen);
-    for (const k in type) {
-      switch (k) {
-        default:
-          this[k] = type[k];
-          break;
-      }
-    }
+    assignRemap({}, this, type);
   }
 }
