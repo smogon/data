@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/jest": "^24.0.19",
     "gts": "^1.1.0",
+    "husky": "^3.0.9",
     "jest": "^24.9.0",
     "json-stringify-deterministic": "^1.0.1",
     "source-map-support": "^0.5.13",
@@ -39,5 +40,10 @@
     "fullbuild": "npm run compile && npm run lint",
     "fulltest": "npm run fullbuild && npm run test",
     "import": "node build/tools/convert-ps-data.js vendor/Pokemon-Showdown/data build/data"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint"
+    }
   }
 }
