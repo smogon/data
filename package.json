@@ -35,7 +35,6 @@
     "test": "jest",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "posttest": "npm run lint",
     "build": "tsc && tslint --project . -c tslint-semantic.json",
     "fullbuild": "npm run compile && npm run lint",
     "fulltest": "npm run fullbuild && npm run test",
