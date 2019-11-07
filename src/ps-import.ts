@@ -1,5 +1,6 @@
 import { toID } from './common';
 import { GenerationNumber, GENERATIONS } from './gens';
+import { StatsTable } from './stats';
 import path from 'path';
 import fs from 'fs';
 import * as Dex from './dex-interfaces';
@@ -237,12 +238,14 @@ type PSExt = {
     types: 'present';
   };
   species: {
+    num: number;
     name: string;
     prevo: 'present';
     evos: 'present';
     types: 'present';
     abilities: 'present';
     learnset: 'present';
+    baseStats: StatsTable;
   };
   abilities: { name: string; shortDesc: string; desc: string };
   items: { name: string; shortDesc: string; desc: string };
@@ -265,12 +268,14 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
 
   for (const [id, specieIn] of Object.entries(speciesIn)) {
     const specieOut: Dex.Species<'Plain', PSExt> = {
+      num: specieIn.num,
       name: specieIn.species,
       prevo: null,
       evos: [],
       abilities: [],
       types: [],
       learnset: [],
+      baseStats: specieIn.baseStats,
     };
 
     const prevoId = dexMap.species.get(specieIn.prevo);
