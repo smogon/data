@@ -225,6 +225,8 @@ function nullCoalesce(x: any, y: any) {
   return x;
 }
 
+type MoveCategory = 'Physical' | 'Special' | 'Status';
+
 type PSExt = {
   gens: {
     num: GenerationNumber;
@@ -244,7 +246,17 @@ type PSExt = {
   };
   abilities: { name: string; shortDesc: string; desc: string };
   items: { name: string; shortDesc: string; desc: string };
-  moves: { name: string; shortDesc: string; desc: string; type: 'present' };
+  moves: {
+    name: string;
+    shortDesc: string;
+    desc: string;
+    type: 'present';
+    basePower: number;
+    pp: number;
+    accuracy: number | 'Bypass';
+    priority: number;
+    category: MoveCategory;
+  };
   types: { name: string };
 };
 
@@ -351,6 +363,11 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
       type: dexMap.types.get(moveIn.type) as number,
       shortDesc: nullCoalesce(moveIn.shortDesc, moveIn.desc),
       desc: nullCoalesce(moveIn.desc, moveIn.shortDesc),
+      basePower: moveIn.basePower,
+      accuracy: moveIn.accuracy === true ? 'Bypass' : moveIn.accuracy,
+      pp: moveIn.pp,
+      priority: moveIn.priority,
+      category: moveIn.category,
     };
 
     movesOut.push(moveOut);
