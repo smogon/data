@@ -1,6 +1,4 @@
-import * as I from './dex-interfaces';
-
-class Transformer<Src, Dest> implements I.Store<Dest> {
+class Transformer<Src, Dest> {
   constructor(
     private source: Src[],
     private fn: (dv: Src) => Dest,
@@ -30,17 +28,14 @@ class Transformer<Src, Dest> implements I.Store<Dest> {
   }
 }
 
-export default class Dex<Ext extends I.ExtSpec> {
+export default class Dex {
   constructor(
-    dex: I.Dex<'Plain', Ext>,
-    public gens = new Transformer(
-      dex.gens,
-      (gen: I.Generation<'Plain', Ext>) => new Generation(gen)
-    )
+    dex: any,
+    public gens = new Transformer(dex.gens, (gen: any) => new Generation(gen))
   ) {}
 }
 
-class Generation<Ext extends I.ExtSpec> {
+class Generation {
   [k: string]: unknown;
 
   constructor(
@@ -89,7 +84,7 @@ const abilitiesSym = Symbol();
 const typesSym = Symbol();
 const learnsetSym = Symbol();
 
-class Species<Ext extends I.ExtSpec> {
+class Species {
   private [prevoSym]: number | null | undefined;
   private [evosSym]: number[] | undefined;
   private [abilitiesSym]: number[] | undefined;
@@ -97,7 +92,7 @@ class Species<Ext extends I.ExtSpec> {
   private [learnsetSym]: number[] | undefined;
   [k: string]: unknown;
 
-  constructor(public gen: Generation<Ext>, specie: any) {
+  constructor(public gen: Generation, specie: any) {
     for (const k in specie) {
       switch (k) {
         case 'prevo':
@@ -154,10 +149,10 @@ class Species<Ext extends I.ExtSpec> {
   }
 }
 
-class Ability<Ext extends I.ExtSpec> {
+class Ability {
   [k: string]: unknown;
 
-  constructor(public gen: Generation<Ext>, ability: any) {
+  constructor(public gen: Generation, ability: any) {
     for (const k in ability) {
       switch (k) {
         default:
@@ -168,10 +163,10 @@ class Ability<Ext extends I.ExtSpec> {
   }
 }
 
-class Item<Ext extends I.ExtSpec> {
+class Item {
   [k: string]: unknown;
 
-  constructor(public gen: Generation<Ext>, item: any) {
+  constructor(public gen: Generation, item: any) {
     for (const k in item) {
       switch (k) {
         default:
@@ -184,11 +179,11 @@ class Item<Ext extends I.ExtSpec> {
 
 const typeSym = Symbol();
 
-class Move<Ext extends I.ExtSpec> {
+class Move {
   private [typeSym]: number | undefined;
   [k: string]: unknown;
 
-  constructor(public gen: Generation<Ext>, move: any) {
+  constructor(public gen: Generation, move: any) {
     for (const k in move) {
       switch (k) {
         case 'type':
@@ -208,10 +203,10 @@ class Move<Ext extends I.ExtSpec> {
   }
 }
 
-class Type<Ext extends I.ExtSpec> {
+class Type {
   [k: string]: unknown;
 
-  constructor(public gen: Generation<Ext>, type: any) {
+  constructor(public gen: Generation, type: any) {
     for (const k in type) {
       switch (k) {
         default:
