@@ -28,12 +28,16 @@ class Transformer<Src, Dest> {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export default class Dex {
   constructor(
     dex: any,
     public gens = new Transformer(dex.gens, (gen: any) => new Generation(gen))
   ) {}
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 class Generation {
   [k: string]: unknown;
@@ -78,44 +82,24 @@ class Generation {
   }
 }
 
+class GenerationalBase {
+  constructor(public gen: Generation) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 const prevoSym = Symbol();
 const evosSym = Symbol();
 const abilitiesSym = Symbol();
 const typesSym = Symbol();
 const learnsetSym = Symbol();
 
-class Species {
+class SpeciesBase extends GenerationalBase {
   private [prevoSym]: number | null | undefined;
   private [evosSym]: number[] | undefined;
   private [abilitiesSym]: number[] | undefined;
   private [typesSym]: number[] | undefined;
   private [learnsetSym]: number[] | undefined;
-  [k: string]: unknown;
-
-  constructor(public gen: Generation, specie: any) {
-    for (const k in specie) {
-      switch (k) {
-        case 'prevo':
-          this[prevoSym] = specie.prevo;
-          break;
-        case 'evos':
-          this[evosSym] = specie.evos;
-          break;
-        case 'abilities':
-          this[abilitiesSym] = specie.abilities;
-          break;
-        case 'types':
-          this[typesSym] = specie.types;
-          break;
-        case 'learnset':
-          this[learnsetSym] = specie.learnset;
-          break;
-        default:
-          this[k] = specie[k];
-          break;
-      }
-    }
-  }
 
   get prevo() {
     const v = this[prevoSym];
@@ -149,10 +133,43 @@ class Species {
   }
 }
 
-class Ability {
+class Species extends SpeciesBase {
   [k: string]: unknown;
 
-  constructor(public gen: Generation, ability: any) {
+  constructor(gen: Generation, specie: any) {
+    super(gen);
+    for (const k in specie) {
+      switch (k) {
+        case 'prevo':
+          this[prevoSym] = specie.prevo;
+          break;
+        case 'evos':
+          this[evosSym] = specie.evos;
+          break;
+        case 'abilities':
+          this[abilitiesSym] = specie.abilities;
+          break;
+        case 'types':
+          this[typesSym] = specie.types;
+          break;
+        case 'learnset':
+          this[learnsetSym] = specie.learnset;
+          break;
+        default:
+          this[k] = specie[k];
+          break;
+      }
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class Ability extends GenerationalBase {
+  [k: string]: unknown;
+
+  constructor(gen: Generation, ability: any) {
+    super(gen);
     for (const k in ability) {
       switch (k) {
         default:
@@ -163,10 +180,13 @@ class Ability {
   }
 }
 
-class Item {
+////////////////////////////////////////////////////////////////////////////////
+
+class Item extends GenerationalBase {
   [k: string]: unknown;
 
-  constructor(public gen: Generation, item: any) {
+  constructor(gen: Generation, item: any) {
+    super(gen);
     for (const k in item) {
       switch (k) {
         default:
@@ -177,13 +197,25 @@ class Item {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 const typeSym = Symbol();
 
-class Move {
+class MoveBase extends GenerationalBase {
   private [typeSym]: number | undefined;
+
+  get type() {
+    const v = this[typeSym];
+    if (v === undefined) throw new Error('type not loaded yet');
+    return this.gen.types.get(v);
+  }
+}
+
+class Move extends MoveBase {
   [k: string]: unknown;
 
-  constructor(public gen: Generation, move: any) {
+  constructor(gen: Generation, move: any) {
+    super(gen);
     for (const k in move) {
       switch (k) {
         case 'type':
@@ -195,18 +227,15 @@ class Move {
       }
     }
   }
-
-  get type() {
-    const v = this[typeSym];
-    if (v === undefined) throw new Error('type not loaded yet');
-    return this.gen.types.get(v);
-  }
 }
 
-class Type {
+////////////////////////////////////////////////////////////////////////////////
+
+class Type extends GenerationalBase {
   [k: string]: unknown;
 
-  constructor(public gen: Generation, type: any) {
+  constructor(gen: Generation, type: any) {
+    super(gen);
     for (const k in type) {
       switch (k) {
         default:
