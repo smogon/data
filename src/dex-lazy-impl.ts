@@ -1,8 +1,8 @@
 class Transformer<Src, Dest> {
   constructor(
-    private source: Src[],
-    private fn: (dv: Src) => Dest,
-    private cache: Dest[] = new Array(source.length)
+    private source: Src[][],
+    private fn: (dv: Src[]) => Dest,
+    private cache: Dest[] = []
   ) {}
 
   get(id: number) {
@@ -11,29 +11,45 @@ class Transformer<Src, Dest> {
       return v;
     }
 
-    const dv = this.source[id];
-    if (dv === undefined) {
-      throw new Error(`Cannot resolve ${id}`);
+    const sources = [];
+    for (const source of this.source) {
+      if (source === null) continue;
+      const dv = source[id];
+      if (dv === undefined) {
+        throw new Error(`Cannot resolve ${id}`);
+      }
+      sources.push(dv);
     }
 
-    v = this.fn(dv);
+    v = this.fn(sources);
     this.cache[id] = v;
     return v;
   }
 
   *[Symbol.iterator]() {
-    for (let i = 0; i < this.source.length; i++) {
+    let length = 0;
+    for (const source of this.source) {
+      if (source !== null) {
+        // For now, assume all that sources have the same length
+        length = source.length;
+        break;
+      }
+    }
+
+    for (let i = 0; i < length; i++) {
       yield this.get(i);
     }
   }
 }
 
-function assignRemap(remap: Record<string, symbol>, dest: any, src: any) {
-  for (const k in src) {
-    if (k in remap) {
-      dest[remap[k]] = src[k];
-    } else {
-      dest[k] = src[k];
+function assignRemap(remap: Record<string, symbol>, dest: any, srcs: any[]) {
+  for (const src of srcs) {
+    for (const k in src) {
+      if (k in remap) {
+        dest[remap[k]] = src[k];
+      } else {
+        dest[k] = src[k];
+      }
     }
   }
 }
@@ -41,52 +57,64 @@ function assignRemap(remap: Record<string, symbol>, dest: any, src: any) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export default class Dex {
-  constructor(
-    dex: any,
-    public gens = new Transformer(dex.gens, (gen: any) => new Generation(gen))
-  ) {}
+  gens: Transformer<any, any>;
+  constructor(dexSrc: any[]) {
+    const genSrc: any[] = [];
+    this.gens = new Transformer(genSrc, (gen: any[]) => new Generation(gen));
+    for (const dex of dexSrc) {
+      genSrc.push(dex.gens);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class Generation {
+  species: Transformer<any, any>;
+  abilities: Transformer<any, any>;
+  items: Transformer<any, any>;
+  moves: Transformer<any, any>;
+  types: Transformer<any, any>;
   [k: string]: unknown;
 
-  constructor(
-    gen: any,
-    // Must always be defined for now; decide what to do later
-    public species: Transformer<any, any> = new Transformer(
-      gen.species !== undefined ? gen.species : [],
-      (specie: any) => new Species(this, specie)
-    ),
-    public abilities: Transformer<any, any> = new Transformer(
-      gen.abilities !== undefined ? gen.abilities : [],
-      (ability: any) => new Ability(this, ability)
-    ),
-    public items: Transformer<any, any> = new Transformer(
-      gen.items !== undefined ? gen.items : [],
-      (item: any) => new Item(this, item)
-    ),
-    public moves: Transformer<any, any> = new Transformer(
-      gen.moves !== undefined ? gen.moves : [],
-      (move: any) => new Move(this, move)
-    ),
-    public types: Transformer<any, any> = new Transformer(
-      gen.types !== undefined ? gen.types : [],
-      (type: any) => new Type(this, type)
-    )
-  ) {
-    for (const k in gen) {
-      switch (k) {
-        case 'species':
-        case 'abilities':
-        case 'items':
-        case 'moves':
-        case 'types':
-          break;
-        default:
-          this[k] = gen[k];
-          break;
+  constructor(genSrc: any[]) {
+    // Explicitly relying on the ability to mutate this before accessing a
+    // transformer element
+    const speciesSrc: any[] = [];
+    const abilitiesSrc: any[] = [];
+    const itemsSrc: any[] = [];
+    const movesSrc: any[] = [];
+    const typesSrc: any[] = [];
+
+    this.species = new Transformer(speciesSrc, (specie: any[]) => new Species(this, specie));
+    this.abilities = new Transformer(abilitiesSrc, (ability: any[]) => new Ability(this, ability));
+    this.items = new Transformer(itemsSrc, (item: any[]) => new Item(this, item));
+    this.moves = new Transformer(movesSrc, (move: any[]) => new Move(this, move));
+    this.types = new Transformer(typesSrc, (type: any[]) => new Type(this, type));
+
+    // Can we abstract this logic into assignRemap?
+    for (const gen of genSrc) {
+      for (const k in gen) {
+        switch (k) {
+          case 'species':
+            speciesSrc.push(gen[k]);
+            break;
+          case 'abilities':
+            abilitiesSrc.push(gen[k]);
+            break;
+          case 'items':
+            itemsSrc.push(gen[k]);
+            break;
+          case 'moves':
+            movesSrc.push(gen[k]);
+            break;
+          case 'types':
+            typesSrc.push(gen[k]);
+            break;
+          default:
+            this[k] = gen[k];
+            break;
+        }
       }
     }
   }
@@ -146,7 +174,7 @@ class SpeciesBase extends GenerationalBase {
 class Species extends SpeciesBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, specie: any) {
+  constructor(gen: Generation, specie: any[]) {
     super(gen);
     assignRemap(
       {
@@ -167,7 +195,7 @@ class Species extends SpeciesBase {
 class Ability extends GenerationalBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, ability: any) {
+  constructor(gen: Generation, ability: any[]) {
     super(gen);
     assignRemap({}, this, ability);
   }
@@ -178,7 +206,7 @@ class Ability extends GenerationalBase {
 class Item extends GenerationalBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, item: any) {
+  constructor(gen: Generation, item: any[]) {
     super(gen);
     assignRemap({}, this, item);
   }
