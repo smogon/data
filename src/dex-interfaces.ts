@@ -4,11 +4,6 @@ import { GenerationNumber } from './gens';
 
 export type ExtSpec = {
   gens?: {
-    species?: 'present';
-    abilities?: 'present';
-    moves?: 'present';
-    items?: 'present';
-    types?: 'present';
     [k: string]: unknown;
   };
   species?: {
@@ -45,6 +40,14 @@ type RichField<
   R extends Record<string, unknown>
 > = ExtField<Ext, Field> extends Record<keyof R, 'present'> ? R : {};
 
+// TODO better name.
+type CollectionField<Ext extends ExtSpec, R extends Record<string, unknown>> = Ext extends Record<
+  keyof R,
+  unknown
+>
+  ? R
+  : {};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface Store<T> {
@@ -69,11 +72,11 @@ export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'gens'>,
   'species' | 'abilities' | 'items' | 'moves' | 'types'
 > &
-  RichField<Ext, 'gens', { species: Collection<K, Species<K, Ext>> }> &
-  RichField<Ext, 'gens', { abilities: Collection<K, Ability<K, Ext>> }> &
-  RichField<Ext, 'gens', { items: Collection<K, Item<K, Ext>> }> &
-  RichField<Ext, 'gens', { moves: Collection<K, Move<K, Ext>> }> &
-  RichField<Ext, 'gens', { types: Collection<K, Type<K, Ext>> }>;
+  CollectionField<Ext, { species: Collection<K, Species<K, Ext>> }> &
+  CollectionField<Ext, { abilities: Collection<K, Ability<K, Ext>> }> &
+  CollectionField<Ext, { items: Collection<K, Item<K, Ext>> }> &
+  CollectionField<Ext, { moves: Collection<K, Move<K, Ext>> }> &
+  CollectionField<Ext, { types: Collection<K, Type<K, Ext>> }>;
 
 export type GameObject<K extends Format, Ext extends ExtSpec = {}> = Backref<
   K,

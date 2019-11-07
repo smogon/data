@@ -231,11 +231,6 @@ type MoveCategory = 'Physical' | 'Special' | 'Status';
 type PSExt = {
   gens: {
     num: GenerationNumber;
-    species: 'present';
-    abilities: 'present';
-    items: 'present';
-    moves: 'present';
-    types: 'present';
   };
   species: {
     num: number;
