@@ -39,10 +39,5 @@
     "fullbuild": "npm run compile && npm run lint",
     "fulltest": "npm run fullbuild && npm run test",
     "import": "node build/tools/convert-ps-data.js vendor/Pokemon-Showdown/data build/data"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint"
-    }
   }
 }
