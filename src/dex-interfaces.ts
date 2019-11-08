@@ -2,30 +2,33 @@ import { GenerationNumber } from './gens';
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// TypeScript just gives up at inferring an ExtSpec. If we leave just the rich fields ('present') then an extension without any rich fields will trigger "weak type detection" (https://mariusschulz.com/blog/weak-type-detection-in-typescript). But if we leave the [k: string]: unknown bits, then leaving out a type annotation means all fields are present.
+//
+// So for now, just deal with errors where you put something other than
+// 'present'. Or maybe there's another way. idk.
 export type ExtSpec = {
   gens?: {
-    [k: string]: unknown;
+    //[k: string]: unknown;
   };
   species?: {
-    prevo?: 'present';
-    evos?: 'present';
-    abilities?: 'present';
-    types?: 'present';
-    learnset?: 'present';
-    [k: string]: unknown;
+    //prevo?: 'present';
+    //evos?: 'present';
+    //abilities?: 'present';
+    //types?: 'present';
+    //learnset?: 'present';
+    //[k: string]: unknown;
   };
   abilities?: {
-    [k: string]: unknown;
+    //[k: string]: unknown;
   };
   items?: {
-    [k: string]: unknown;
+    //[k: string]: unknown;
   };
   moves?: {
-    type?: 'present';
-    [k: string]: unknown;
+    //type?: 'present';
   };
   types?: {
-    [k: string]: unknown;
+    //[k: string]: unknown;
   };
 };
 
