@@ -55,6 +55,8 @@ type CollectionField<Ext extends ExtSpec, R extends Record<string, unknown>> = E
 
 export interface Store<T> {
   [Symbol.iterator](): Iterator<T>;
+  find(fn: (obj: T) => boolean): T | undefined;
+  find1(fn: (obj: T) => boolean): T;
 }
 
 export type Format = 'Plain' | 'Rich';

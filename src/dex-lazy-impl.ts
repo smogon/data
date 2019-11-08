@@ -26,6 +26,23 @@ class Transformer<Src, Dest> {
     return v;
   }
 
+  find(fn: (obj: Dest) => boolean) {
+    for (const obj of this) {
+      if (fn(obj)) {
+        return obj;
+      }
+    }
+    return undefined;
+  }
+
+  find1(fn: (obj: Dest) => boolean) {
+    const v = this.find(fn);
+    if (v === undefined) {
+      throw new Error('Nothing found');
+    }
+    return v;
+  }
+
   *[Symbol.iterator]() {
     let length = 0;
     for (const source of this.source) {

@@ -1,13 +1,5 @@
 import { loader, Dex, GenerationNumber } from '../index';
 
-function head<T>(iter: Iterator<T>) {
-  const v = iter.next();
-  if (v.done === true) {
-    throw new Error('empty iterator');
-  }
-  return v.value;
-}
-
 describe('lazy impl', () => {
   const dexSrc1: Dex<
     'Plain',
@@ -64,9 +56,8 @@ describe('lazy impl', () => {
     .construct();
 
   test('resolves', () => {
-    const gen1 = head(dex.gens[Symbol.iterator]());
-    const specie = head(gen1.species[Symbol.iterator]());
-    expect(specie.name).toBe('Charmander');
+    const gen1 = dex.gens.find1(({ num }) => num === 1);
+    const specie = gen1.species.find1(({ name }) => name === 'Charmander');
     expect(specie.prevo).toBe(null);
     expect(specie.heightm).toBe(0.6);
     expect(specie.evos[0].name).toBe('Charmeleon');
