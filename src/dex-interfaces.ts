@@ -69,7 +69,6 @@ export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'gens'>,
   'species' | 'abilities' | 'items' | 'moves' | 'types'
 > &
-  // Inline call to OverrideField ;
   RichField<Ext, 'gens', { species: Collection<K, Species<K, Ext>> }> &
   RichField<Ext, 'gens', { abilities: Collection<K, Ability<K, Ext>> }> &
   RichField<Ext, 'gens', { items: Collection<K, Item<K, Ext>> }> &
