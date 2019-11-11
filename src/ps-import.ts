@@ -16,6 +16,14 @@ type DataKind = (typeof DATAKINDS)[number];
 type IDMap = Record<string, any>;
 type PSDex = Record<GenerationNumber, Record<DataKind, IDMap>>;
 
+// Use ?? when gts supports it
+function nullCoalesce(x: any, y: any) {
+  if (x === undefined || x === null) {
+    return y;
+  }
+  return x;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Loading
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,6 +190,54 @@ const PREDS = {
   },
 };
 
+// Names in gen > 5 => names in gen <= 5
+// TODO Maybe move to a diff file?
+const renames = new Map([
+  // Moves
+  ['Ancient Power', 'AncientPower'],
+  ['Bubble Beam', 'BubbleBeam'],
+  ['Double Slap', 'DoubleSlap'],
+  ['Dragon Breath', 'DragonBreath'],
+  ['Dynamic Punch', 'DynamicPunch'],
+  ['Extreme Speed', 'ExtremeSpeed'],
+  ['Feint Attack', 'Faint Attack'],
+  ['Feather Dance', 'FeatherDance'],
+  ['Grass Whistle', 'GrassWhistle'],
+  ['High Jump Kick', 'Hi Jump Kick'],
+  ['Poison Powder', 'PoisonPowder'],
+  ['Sand Attack', 'Sand-Attack'],
+  ['Self-Destruct', 'Selfdestruct'],
+  ['Smelling Salts', 'SmellingSalt'],
+  ['Smokescreen', 'SmokeScreen'],
+  ['Soft-Boiled', 'Softboiled'],
+  ['Solar Beam', 'SolarBeam'],
+  ['Sonic Boom', 'SonicBoom'],
+  ['Thunder Punch', 'ThunderPunch'],
+  ['Thunder Shock', 'ThunderShock'],
+  ['Vice Grip', 'ViceGrip'],
+
+  // Abilities
+  ['Compound Eyes', 'Compoundeyes'],
+  ['Lightning Rod', 'Lightningrod'],
+
+  // Items
+  ['Balm Mushroom', 'BalmMushroom'],
+  ['Black Glasses', 'BlackGlasses'],
+  ['Bright Powder', 'BrightPowder'],
+  ['Deep Sea Scale', 'DeepSeaScale'],
+  ['Deep Sea Tooth', 'DeepSeaTooth'],
+  ['Energy Powder', 'EnergyPowder'],
+  ['Never-Melt Ice', 'NeverMeltIce'],
+  ['Paralyze Heal', 'Parlyz Heal'],
+  ['Rage Candy Bar', 'RageCandyBar'],
+  ['Silver Powder', 'SilverPowder'],
+  ['Thunder Stone', 'Thunderstone'],
+  ['Tiny Mushroom', 'TinyMushroom'],
+  ['Twisted Spoon', 'TwistedSpoon'],
+  ['X Defense', 'X Defend'],
+  ['X Sp. Atk', 'X Special'],
+]);
+
 function filterPSDex(dex: PSDex) {
   for (const gen of GENERATIONS) {
     for (const k of DATAKINDS) {
@@ -190,6 +246,8 @@ function filterPSDex(dex: PSDex) {
         const obj = map[id];
         if ((obj.gen !== undefined && gen < obj.gen) || !PREDS[gen][k](obj)) {
           delete map[id];
+        } else if (gen <= 5 && 'name' in obj) {
+          obj.name = nullCoalesce(renames.get(obj.name), obj.name);
         }
       }
     }
@@ -197,7 +255,7 @@ function filterPSDex(dex: PSDex) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Species
+// Massage data
 ////////////////////////////////////////////////////////////////////////////////
 
 // Kinda similar name to IDMap, might want to call this something else, idk
@@ -216,14 +274,6 @@ function makeMap(dex: Record<DataKind, IDMap>) {
   }
 
   return dexMap;
-}
-
-// Use ?? when gts supports it
-function nullCoalesce(x: any, y: any) {
-  if (x === undefined || x === null) {
-    return y;
-  }
-  return x;
 }
 
 type MoveCategory = 'Physical' | 'Special' | 'Status';

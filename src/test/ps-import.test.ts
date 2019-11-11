@@ -28,6 +28,13 @@ describe('ps-import', () => {
     expect(data.gens[3].items.find(x => x.name === 'Berserk Gene')).toBeUndefined();
   });
 
+  test('old gen names', () => {
+    expect(data.gens[6].moves.find(x => x.name === 'High Jump Kick')).toBeDefined();
+    expect(data.gens[6].moves.find(x => x.name === 'Hi Jump Kick')).toBeUndefined();
+    expect(data.gens[5].moves.find(x => x.name === 'High Jump Kick')).toBeUndefined();
+    expect(data.gens[5].moves.find(x => x.name === 'Hi Jump Kick')).toBeDefined();
+  });
+
   test('JSON roundtrippable', () => {
     // TODO: compare top-level too
     for (const gen of Object.values(data.gens)) {
