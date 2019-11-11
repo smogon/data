@@ -446,7 +446,7 @@ function transformPSDex(dexIn: PSDex): Dex.Dex<'Plain', PSExt> {
       moves: transformMoves(genMap, genIn.moves),
       types: transformTypes(genMap, genIn.types),
     };
-    dexOut.gens[gen] = genOut;
+    dexOut.gens.push(genOut);
   }
   return dexOut;
 }

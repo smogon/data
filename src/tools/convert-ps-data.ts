@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs';
 import psImport from '../ps-import';
-import { GENERATIONS } from '../gens';
 // @ts-ignore
 import detStringify from 'json-stringify-deterministic';
 
@@ -14,8 +13,7 @@ if (psDataDir === undefined || exportDir === undefined) {
 
 const data = psImport(psDataDir);
 
-for (const gen of GENERATIONS) {
-  const genData = data.gens[gen];
+for (const gen of data.gens) {
   fs.mkdirSync(exportDir, { recursive: true });
-  fs.writeFileSync(path.join(exportDir, `${gen}.json`), detStringify(genData, { space: '  ' }));
+  fs.writeFileSync(path.join(exportDir, `${gen.num}.json`), detStringify(gen, { space: '  ' }));
 }
