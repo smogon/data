@@ -3,7 +3,7 @@ import { Nature } from './natures';
 
 const STATS = ['hp', 'atk', 'def', 'spe', 'spa', 'spd'] as const;
 
-export type StatName = (typeof STATS)[number];
+export type StatName = typeof STATS[number];
 export type StatsTable<T = number> = { [stat in StatName]: T };
 export type BoostName = Exclude<StatName, 'hp'> | 'accuracy' | 'evasion';
 export type BoostsTable<T = number> = { [boost in BoostName]: T };

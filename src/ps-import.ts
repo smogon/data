@@ -10,19 +10,11 @@ import * as Dex from './dex-interfaces';
 ////////////////////////////////////////////////////////////////////////////////
 
 const DATAKINDS = ['species', 'abilities', 'items', 'moves', 'types'] as const;
-type DataKind = (typeof DATAKINDS)[number];
+type DataKind = typeof DATAKINDS[number];
 
 // This is generally an ID map, but in the case of types, it isn't
 type IDMap = Record<string, any>;
 type PSDex = Record<GenerationNumber, Record<DataKind, IDMap>>;
-
-// Use ?? when gts supports it
-function nullCoalesce(x: any, y: any) {
-  if (x === undefined || x === null) {
-    return y;
-  }
-  return x;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Loading
@@ -247,7 +239,7 @@ function filterPSDex(dex: PSDex) {
         if ((obj.gen !== undefined && gen < obj.gen) || !PREDS[gen][k](obj)) {
           delete map[id];
         } else if (gen <= 5 && 'name' in obj) {
-          obj.name = nullCoalesce(renames.get(obj.name), obj.name);
+          obj.name = renames.get(obj.name) ?? obj.name;
         }
       }
     }
@@ -374,8 +366,8 @@ function transformAbilities(
   for (const [id, abilityIn] of Object.entries(abilitiesIn)) {
     const abilityOut: Dex.Ability<'Plain', PSExt> = {
       name: abilityIn.name,
-      shortDesc: nullCoalesce(abilityIn.shortDesc, abilityIn.desc),
-      desc: nullCoalesce(abilityIn.desc, abilityIn.shortDesc),
+      shortDesc: abilityIn.shortDesc ?? abilityIn.desc,
+      desc: abilityIn.desc ?? abilityIn.shortDesc,
     };
 
     abilitiesOut.push(abilityOut);
@@ -390,8 +382,8 @@ function transformItems(dexMap: DexMap, itemsIn: IDMap): Array<Dex.Item<'Plain',
   for (const [id, itemIn] of Object.entries(itemsIn)) {
     const itemOut: Dex.Item<'Plain', PSExt> = {
       name: itemIn.name,
-      shortDesc: nullCoalesce(itemIn.shortDesc, itemIn.desc),
-      desc: nullCoalesce(itemIn.desc, itemIn.shortDesc),
+      shortDesc: itemIn.shortDesc ?? itemIn.desc,
+      desc: itemIn.desc ?? itemIn.shortDesc,
     };
 
     itemsOut.push(itemOut);
@@ -411,8 +403,8 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
     const moveOut: Dex.Move<'Plain', PSExt> = {
       name: moveIn.name,
       type: dexMap.types.get(moveIn.type) as number,
-      shortDesc: nullCoalesce(moveIn.shortDesc, moveIn.desc),
-      desc: nullCoalesce(moveIn.desc, moveIn.shortDesc),
+      shortDesc: moveIn.shortDesc ?? moveIn.desc,
+      desc: moveIn.desc ?? moveIn.shortDesc,
       basePower: moveIn.basePower,
       accuracy: moveIn.accuracy === true ? 'Bypass' : moveIn.accuracy,
       pp: moveIn.pp,
