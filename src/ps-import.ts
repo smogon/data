@@ -447,6 +447,9 @@ export type PSExt = {
     isNonstandard: Nonstandard;
     isBattleOnly: boolean;
     altBattleFormes: 'present';
+    // TODO: what to do with ()
+    tier: string;
+    // doublesTier: string
   };
   abilities: { name: string; shortDesc: string; desc: string; isNonstandard: Nonstandard };
   items: { name: string; shortDesc: string; desc: string; isNonstandard: Nonstandard };
@@ -476,6 +479,17 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
   const speciesOut: Array<Dex.Species<'Plain', PSExt>> = [];
 
   for (const [id, specieIn] of Object.entries(speciesIn)) {
+    // Sometimes other formes don't have tiers. Find its parent forme
+    if (specieIn.tier === undefined) {
+      for (const [id2, specieIn2] of Object.entries(speciesIn)) {
+        for (const otherForme of specieIn2.otherFormes ?? []) {
+          if (otherForme === id) {
+            specieIn.tier = specieIn2.tier;
+          }
+        }
+      }
+    }
+
     const specieOut: Dex.Species<'Plain', PSExt> = {
       num: specieIn.num,
       name: specieIn.species,
@@ -488,6 +502,9 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
       isNonstandard: specieIn.isNonstandard ?? null,
       isBattleOnly: isBattleOnly(specieIn),
       altBattleFormes: [],
+      tier: specieIn.tier,
+      // Can be undefined
+      // doublesTier: specieIn.doublesTier
     };
 
     if (!isBattleOnly(specieIn)) {
