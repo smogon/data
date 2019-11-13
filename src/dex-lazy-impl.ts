@@ -148,6 +148,7 @@ const evosSym = Symbol();
 const abilitiesSym = Symbol();
 const typesSym = Symbol();
 const learnsetSym = Symbol();
+const altBattleFormesSym = Symbol();
 
 class SpeciesBase extends GenerationalBase {
   private [prevoSym]: number | null | undefined;
@@ -155,6 +156,7 @@ class SpeciesBase extends GenerationalBase {
   private [abilitiesSym]: number[] | undefined;
   private [typesSym]: number[] | undefined;
   private [learnsetSym]: number[] | undefined;
+  private [altBattleFormesSym]: number[] | undefined;
 
   get prevo() {
     const v = this[prevoSym];
@@ -185,6 +187,12 @@ class SpeciesBase extends GenerationalBase {
     const v = this[learnsetSym];
     if (v === undefined) throw new Error('learnset not loaded yet');
     return v.map(id => this.gen.moves.get(id));
+  }
+
+  get altBattleFormes() {
+    const v = this[altBattleFormesSym];
+    if (v === undefined) throw new Error('learnset not loaded yet');
+    return v.map(id => this.gen.species.get(id));
   }
 }
 

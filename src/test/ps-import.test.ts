@@ -49,6 +49,17 @@ describe('ps-import', () => {
     expect(data.gens[6].species.find(x => x.name === 'Equilibra')?.isNonstandard).toBe('CAP');
   });
 
+  test('altBattleFormes', () => {
+    const venusaurId = data.gens[6].species.findIndex(x => x.name === 'Venusaur');
+    const venusaurMegaId = data.gens[6].species.findIndex(x => x.name === 'Venusaur-Mega');
+    expect(data.gens[6].species[venusaurId].isBattleOnly).toBe(false);
+    expect(data.gens[6].species[venusaurMegaId].isBattleOnly).toBe(true);
+    expect(data.gens[6].species[venusaurId].altBattleFormes).toStrictEqual([venusaurMegaId]);
+    expect(data.gens[6].species[venusaurMegaId].altBattleFormes).toStrictEqual([venusaurId]);
+    // shouldn't include out-of-battle otherFormes
+    expect(data.gens[6].species.find(x => x.name === 'Rotom')?.altBattleFormes).toStrictEqual([]);
+  });
+
   test('JSON roundtrippable', () => {
     // TODO: compare top-level too
     for (const gen of Object.values(data.gens)) {

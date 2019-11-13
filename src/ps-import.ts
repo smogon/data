@@ -446,6 +446,7 @@ export type PSExt = {
     baseStats: StatsTable;
     isNonstandard: Nonstandard;
     isBattleOnly: boolean;
+    altBattleFormes: 'present';
   };
   abilities: { name: string; shortDesc: string; desc: string; isNonstandard: Nonstandard };
   items: { name: string; shortDesc: string; desc: string; isNonstandard: Nonstandard };
@@ -467,6 +468,10 @@ export type PSExt = {
   types: { name: string };
 };
 
+function isBattleOnly(specieIn: any) {
+  return specieIn.battleOnly ?? isMega(specieIn);
+}
+
 function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'Plain', PSExt>> {
   const speciesOut: Array<Dex.Species<'Plain', PSExt>> = [];
 
@@ -481,8 +486,30 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
       learnset: [],
       baseStats: specieIn.baseStats,
       isNonstandard: specieIn.isNonstandard ?? null,
-      isBattleOnly: specieIn.battleOnly ?? isMega(specieIn),
+      isBattleOnly: isBattleOnly(specieIn),
+      altBattleFormes: [],
     };
+
+    if (!isBattleOnly(specieIn)) {
+      for (const otherForme of specieIn.otherFormes ?? []) {
+        // PS mixes in-battle & out-of-battle formes, untangle
+        const formeId = dexMap.species.get(otherForme);
+        if (formeId !== undefined && isBattleOnly(speciesIn[otherForme])) {
+          specieOut.altBattleFormes.push(formeId);
+        }
+      }
+    } else {
+      // No convenient indexing; loop through and find what we are an otherForme of.
+      for (const [id2, specieIn2] of Object.entries(speciesIn)) {
+        if (isBattleOnly(specieIn2)) continue;
+        for (const otherForme of specieIn2.otherFormes ?? []) {
+          if (otherForme === id) {
+            // Guaranteed to be in this gen, silence type checker
+            specieOut.altBattleFormes.push(dexMap.species.get(id2)!);
+          }
+        }
+      }
+    }
 
     const prevoId = dexMap.species.get(specieIn.prevo);
     if (prevoId !== undefined) {

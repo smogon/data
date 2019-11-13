@@ -91,7 +91,7 @@ export type GameObject<K extends Format, Ext extends ExtSpec = {}> = Backref<
 
 export type Species<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'species'>,
-  'prevo' | 'evos' | 'abilities' | 'types' | 'learnset'
+  'prevo' | 'evos' | 'abilities' | 'types' | 'learnset' | 'altBattleFormes'
 > &
   GameObject<K, Ext> &
   RichField<Ext, 'species', { prevo: Ref<K, Species<K, Ext>> | null }> &
@@ -99,7 +99,8 @@ export type Species<K extends Format, Ext extends ExtSpec = {}> = Omit<
   RichField<Ext, 'species', { abilities: Array<Ref<K, Ability<K, Ext>>> }> &
   RichField<Ext, 'species', { types: Array<Ref<K, Type<K, Ext>>> }> &
   // TODO: Learnset interface
-  RichField<Ext, 'species', { learnset: Array<Ref<K, Move<K, Ext>>> }>;
+  RichField<Ext, 'species', { learnset: Array<Ref<K, Move<K, Ext>>> }> &
+  RichField<Ext, 'species', { altBattleFormes: Array<Ref<K, Species<K, Ext>>> }>;
 
 export type Ability<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'abilities'> &
   GameObject<K, Ext>;
