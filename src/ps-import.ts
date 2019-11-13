@@ -119,12 +119,7 @@ function inheritPSDex(dex: PSDex) {
 // Filtering
 ////////////////////////////////////////////////////////////////////////////////
 
-// Limits from sim/dex-data.ts
-
-// num filters out rockruffdusk, pokestargiant2, pokestargiantpropo2
-function isStandard(s: any) {
-  return s.num !== undefined && (s.isNonstandard === undefined || s.isNonstandard === 'CAP');
-}
+// Limits from sim/dex-data.ts}
 
 function isMega(s: any) {
   return ['Mega', 'Mega-X', 'Mega-Y', 'Primal'].includes(s.forme);
@@ -132,7 +127,21 @@ function isMega(s: any) {
 
 const PREDS = {
   species(gen: GenerationNumber, s: any) {
-    if (!isStandard(s)) {
+    // TODO Missingno, we don't have a "bird" type yet
+    if (s.isNonstandard === 'Glitch') {
+      return false;
+    }
+
+    if (s.isNonstandard === 'LGPE' && gen !== 7) {
+      return false;
+    }
+
+    if (s.isNonstandard === 'Pokestar' && gen !== 5) {
+      return false;
+    }
+
+    // num filters out rockruffdusk, pokestargiant2, pokestargiantpropo2
+    if (s.num === undefined) {
       return false;
     }
 
@@ -167,7 +176,7 @@ const PREDS = {
   },
 
   abilities(gen: GenerationNumber, a: any) {
-    if (!isStandard(a)) {
+    if (a.name === 'No Ability') {
       return false;
     }
 
@@ -213,9 +222,15 @@ const PREDS = {
   },
 
   moves(gen: GenerationNumber, m: any) {
-    if (!isStandard(m)) {
+    // TODO Magikarp's Revenge, not sure what to do here
+    if (m.isNonstandard === 'Custom') {
       return false;
     }
+
+    if (m.isNonstandard === 'LGPE' && gen !== 7) {
+      return false;
+    }
+
     switch (gen) {
       case 7:
         return true;
@@ -414,7 +429,7 @@ function makeMap(dex: Record<DataKind, IDMap>) {
 }
 
 export type MoveCategory = 'Physical' | 'Special' | 'Status';
-export type Nonstandard = 'CAP' | null;
+export type Nonstandard = 'CAP' | 'LGPE' | 'Pokestar' | null;
 
 export type PSExt = {
   gens: {
