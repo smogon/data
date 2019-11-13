@@ -121,69 +121,125 @@ function inheritPSDex(dex: PSDex) {
 
 // Limits from sim/dex-data.ts
 
-function isMega(s: any) {
-  return ['Mega', 'Mega-X', 'Mega-Y', 'Primal'].includes(s.forme);
-}
-
-function isAlolaOrStarter(s: any) {
-  return s.forme !== undefined && (s.forme.startsWith('Alola') || s.forme === 'Starter');
-}
-
 // num filters out rockruffdusk, pokestargiant2, pokestargiantpropo2
 function isStandard(s: any) {
   return s.num !== undefined && (s.isNonstandard === undefined || s.isNonstandard === 'CAP');
 }
 
+function isMega(s: any) {
+  return ['Mega', 'Mega-X', 'Mega-Y', 'Primal'].includes(s.forme);
+}
+
 const PREDS = {
-  1: {
-    species: (s: any) => isStandard(s) && s.num <= 151 && !isMega(s) && !isAlolaOrStarter(s),
-    abilities: (a: any) => false,
-    items: (i: any) => false,
-    moves: (m: any) => isStandard(m) && m.num <= 165,
-    types: (t: any) => t !== null,
+  species(gen: GenerationNumber, s: any) {
+    if (!isStandard(s)) {
+      return false;
+    }
+
+    if (isMega(s) && gen < 6) {
+      return false;
+    }
+
+    if (
+      s.forme !== undefined &&
+      (s.forme.startsWith('Alola') || s.forme === 'Starter') &&
+      gen < 5
+    ) {
+      return false;
+    }
+
+    switch (gen) {
+      case 7:
+        return true;
+      case 6:
+        return s.num <= 721;
+      case 5:
+        return s.num <= 649;
+      case 4:
+        return s.num <= 493;
+      case 3:
+        return s.num <= 386;
+      case 2:
+        return s.num <= 251;
+      case 1:
+        return s.num <= 151;
+    }
   },
-  2: {
-    species: (s: any) => isStandard(s) && s.num <= 251 && !isMega(s) && !isAlolaOrStarter(s),
-    abilities: (a: any) => false,
-    items: (i: any) =>
-      0 <= i.num /* Rest should be filtered out by explicit gen. 0 is berserk gene */,
-    moves: (m: any) => isStandard(m) && m.num <= 251,
-    types: (t: any) => t !== null,
+
+  abilities(gen: GenerationNumber, a: any) {
+    if (!isStandard(a)) {
+      return false;
+    }
+
+    switch (gen) {
+      case 7:
+        return true;
+      case 6:
+        return a.num <= 191;
+      case 5:
+        return a.num <= 164;
+      case 4:
+        return a.num <= 123;
+      case 3:
+        return a.num <= 76;
+      case 2:
+      case 1:
+        return false;
+    }
   },
-  3: {
-    species: (s: any) => isStandard(s) && s.num <= 386 && !isMega(s) && !isAlolaOrStarter(s),
-    abilities: (a: any) => isStandard(a) && a.num <= 76,
-    items: (i: any) => isStandard(i) && i.num <= 376,
-    moves: (m: any) => isStandard(m) && m.num <= 354,
-    types: (t: any) => t !== null,
+
+  items(gen: GenerationNumber, i: any) {
+    if (i.isNonstandard === 'Past' && gen !== 2) {
+      return false;
+    }
+
+    switch (gen) {
+      case 7:
+        return true;
+      case 6:
+        return i.num <= 688;
+      case 5:
+        return i.num <= 576;
+      case 4:
+        return i.num <= 536;
+      case 3:
+        return i.num <= 376;
+      case 2:
+        /* Rest should be filtered out by explicit gen. 0 is berserk gene */
+        return 0 <= i.num;
+      case 1:
+        return false;
+    }
   },
-  4: {
-    species: (s: any) => isStandard(s) && s.num <= 493 && !isMega(s) && !isAlolaOrStarter(s),
-    abilities: (a: any) => isStandard(a) && a.num <= 123,
-    items: (i: any) => isStandard(i) && i.num <= 536,
-    moves: (m: any) => isStandard(m) && m.num <= 467,
-    types: (t: any) => t !== null,
+
+  moves(gen: GenerationNumber, m: any) {
+    if (!isStandard(m)) {
+      return false;
+    }
+    switch (gen) {
+      case 7:
+        return true;
+      case 6:
+        return m.num <= 621;
+      case 5:
+        return m.num <= 559;
+      case 4:
+        return m.num <= 467;
+      case 3:
+        return m.num <= 354;
+      case 2:
+        return m.num <= 251;
+      case 1:
+        return m.num <= 165;
+    }
   },
-  5: {
-    species: (s: any) => isStandard(s) && s.num <= 649 && !isMega(s) && !isAlolaOrStarter(s),
-    abilities: (a: any) => isStandard(a) && a.num <= 164,
-    items: (i: any) => isStandard(i) && i.num <= 576,
-    moves: (m: any) => isStandard(m) && m.num <= 559,
-    types: (t: any) => t !== null,
-  },
-  6: {
-    species: (s: any) => isStandard(s) && s.num <= 721 && !isAlolaOrStarter(s),
-    abilities: (a: any) => isStandard(a) && a.num <= 191,
-    items: (i: any) => isStandard(i) && i.num <= 688,
-    moves: (m: any) => isStandard(m) && m.num <= 621,
-    types: (t: any) => t !== null,
-  },
-  7: {
-    species: (s: any) => isStandard(s),
-    abilities: (a: any) => isStandard(a),
-    items: (i: any) => isStandard(i),
-    moves: (m: any) => isStandard(m),
-    types: (t: any) => true,
+
+  types(gen: GenerationNumber, t: any) {
+    if (gen < 7) {
+      return t !== null;
+    } else {
+      return true;
+    }
   },
 };
 
@@ -318,7 +374,7 @@ function filterPSDex(dex: PSDex) {
         if (
           (obj.gen !== undefined && gen < obj.gen) ||
           (supplementalGens !== undefined && !supplementalGens.includes(gen)) ||
-          !PREDS[gen][k](obj)
+          !PREDS[k](gen, obj)
         ) {
           delete map[id];
         } else {
