@@ -37,6 +37,11 @@ describe('ps-import', () => {
     expect(data.gens[4].moves.find(x => x.name === 'Hi Jump Kick')).toBeDefined();
   });
 
+  test('z-moves', () => {
+    expect(data.gens[6].moves.find(x => x.name === 'Absorb')?.zMove).not.toBeNull();
+    expect(data.gens[5].moves.find(x => x.name === 'Absorb')?.zMove).toBeNull();
+  });
+
   test('JSON roundtrippable', () => {
     // TODO: compare top-level too
     for (const gen of Object.values(data.gens)) {

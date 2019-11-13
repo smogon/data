@@ -238,8 +238,14 @@ function filterPSDex(dex: PSDex) {
         const obj = map[id];
         if ((obj.gen !== undefined && gen < obj.gen) || !PREDS[gen][k](obj)) {
           delete map[id];
-        } else if (gen <= 5 && 'name' in obj) {
-          obj.name = renames.get(obj.name) ?? obj.name;
+        } else {
+          if (gen !== 7) {
+            // TODO cleaner way of doing this, just need the test to pass b4 commit
+            delete obj.zMovePower;
+          }
+          if (gen <= 5 && 'name' in obj) {
+            obj.name = renames.get(obj.name) ?? obj.name;
+          }
         }
       }
     }
@@ -296,6 +302,9 @@ export type PSExt = {
     accuracy: number | 'Bypass';
     priority: number;
     category: MoveCategory;
+    zMove: {
+      power: number;
+    } | null;
   };
   types: { name: string };
 };
@@ -410,6 +419,12 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
       pp: moveIn.pp,
       priority: moveIn.priority,
       category: moveIn.category,
+      zMove:
+        moveIn.zMovePower !== undefined
+          ? {
+              power: moveIn.zMovePower,
+            }
+          : null,
     };
 
     movesOut.push(moveOut);
