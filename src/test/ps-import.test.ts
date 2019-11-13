@@ -42,6 +42,13 @@ describe('ps-import', () => {
     expect(data.gens[5].moves.find(x => x.name === 'Absorb')?.zMove).toBeNull();
   });
 
+  test('cap', () => {
+    expect(data.gens[2].species.find(x => x.name === 'Syclant')).toBeUndefined();
+    expect(data.gens[3].species.find(x => x.name === 'Syclant')?.isNonstandard).toBe('CAP');
+    expect(data.gens[3].species.find(x => x.name === 'Equilibra')).toBeUndefined();
+    expect(data.gens[6].species.find(x => x.name === 'Equilibra')?.isNonstandard).toBe('CAP');
+  });
+
   test('JSON roundtrippable', () => {
     // TODO: compare top-level too
     for (const gen of Object.values(data.gens)) {

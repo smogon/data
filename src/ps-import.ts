@@ -129,55 +129,60 @@ function isAlolaOrStarter(s: any) {
   return s.forme !== undefined && (s.forme.startsWith('Alola') || s.forme === 'Starter');
 }
 
+// num filters out rockruffdusk, pokestargiant2, pokestargiantpropo2
+function isStandard(s: any) {
+  return s.num !== undefined && (s.isNonstandard === undefined || s.isNonstandard === 'CAP');
+}
+
 const PREDS = {
   1: {
-    species: (s: any) => 1 <= s.num && s.num <= 151 && !isMega(s) && !isAlolaOrStarter(s),
+    species: (s: any) => isStandard(s) && s.num <= 151 && !isMega(s) && !isAlolaOrStarter(s),
     abilities: (a: any) => false,
     items: (i: any) => false,
-    moves: (m: any) => 1 <= m.num && 1 <= m.num && m.num <= 165,
+    moves: (m: any) => isStandard(m) && m.num <= 165,
     types: (t: any) => t !== null,
   },
   2: {
-    species: (s: any) => 1 <= s.num && s.num <= 251 && !isMega(s) && !isAlolaOrStarter(s),
+    species: (s: any) => isStandard(s) && s.num <= 251 && !isMega(s) && !isAlolaOrStarter(s),
     abilities: (a: any) => false,
     items: (i: any) =>
       0 <= i.num /* Rest should be filtered out by explicit gen. 0 is berserk gene */,
-    moves: (m: any) => 1 <= m.num && m.num <= 251,
+    moves: (m: any) => isStandard(m) && m.num <= 251,
     types: (t: any) => t !== null,
   },
   3: {
-    species: (s: any) => 1 <= s.num && s.num <= 386 && !isMega(s) && !isAlolaOrStarter(s),
-    abilities: (a: any) => 1 <= a.num && a.num <= 76,
-    items: (i: any) => i.isNonstandard === undefined && i.num <= 376,
-    moves: (m: any) => 1 <= m.num && m.num <= 354,
+    species: (s: any) => isStandard(s) && s.num <= 386 && !isMega(s) && !isAlolaOrStarter(s),
+    abilities: (a: any) => isStandard(a) && a.num <= 76,
+    items: (i: any) => isStandard(i) && i.num <= 376,
+    moves: (m: any) => isStandard(m) && m.num <= 354,
     types: (t: any) => t !== null,
   },
   4: {
-    species: (s: any) => 1 <= s.num && s.num <= 493 && !isMega(s) && !isAlolaOrStarter(s),
-    abilities: (a: any) => 1 <= a.num && a.num <= 123,
-    items: (i: any) => i.isNonstandard === undefined && i.num <= 536,
-    moves: (m: any) => 1 <= m.num && m.num <= 467,
+    species: (s: any) => isStandard(s) && s.num <= 493 && !isMega(s) && !isAlolaOrStarter(s),
+    abilities: (a: any) => isStandard(a) && a.num <= 123,
+    items: (i: any) => isStandard(i) && i.num <= 536,
+    moves: (m: any) => isStandard(m) && m.num <= 467,
     types: (t: any) => t !== null,
   },
   5: {
-    species: (s: any) => 1 <= s.num && s.num <= 649 && !isMega(s) && !isAlolaOrStarter(s),
-    abilities: (a: any) => 1 <= a.num && a.num <= 164,
-    items: (i: any) => i.isNonstandard === undefined && i.num <= 576,
-    moves: (m: any) => 1 <= m.num && m.num <= 559,
+    species: (s: any) => isStandard(s) && s.num <= 649 && !isMega(s) && !isAlolaOrStarter(s),
+    abilities: (a: any) => isStandard(a) && a.num <= 164,
+    items: (i: any) => isStandard(i) && i.num <= 576,
+    moves: (m: any) => isStandard(m) && m.num <= 559,
     types: (t: any) => t !== null,
   },
   6: {
-    species: (s: any) => 1 <= s.num && s.num <= 721 && !isAlolaOrStarter(s),
-    abilities: (a: any) => 1 <= a.num && a.num <= 191,
-    items: (i: any) => i.isNonstandard === undefined && i.num <= 688,
-    moves: (m: any) => 1 <= m.num && m.num <= 621,
+    species: (s: any) => isStandard(s) && s.num <= 721 && !isAlolaOrStarter(s),
+    abilities: (a: any) => isStandard(a) && a.num <= 191,
+    items: (i: any) => isStandard(i) && i.num <= 688,
+    moves: (m: any) => isStandard(m) && m.num <= 621,
     types: (t: any) => t !== null,
   },
   7: {
-    species: (s: any) => 1 <= s.num,
-    abilities: (a: any) => 1 <= a.num,
-    items: (i: any) => i.isNonstandard === undefined,
-    moves: (m: any) => 1 <= m.num,
+    species: (s: any) => isStandard(s),
+    abilities: (a: any) => isStandard(a),
+    items: (i: any) => isStandard(i),
+    moves: (m: any) => isStandard(m),
     types: (t: any) => true,
   },
 };
@@ -230,13 +235,91 @@ const renames = new Map([
   ['X Sp. Atk', 'X Special'],
 ]);
 
+const idGens = new Map([
+  // Species
+  ['volkritter', [5, 6, 7]],
+  ['privatyke', [4, 5, 6, 7]],
+  ['volkraken', [5, 6, 7]],
+  ['voodoom', [4, 5, 6, 7]],
+  ['mollux', [5, 6, 7]],
+  ['aurumoth', [5, 6, 7]],
+  ['argalis', [5, 6, 7]],
+  ['cupra', [5, 6, 7]],
+  ['pajantom', [7]],
+  ['brattler', [5, 6, 7]],
+  ['syclant', [4, 5, 6, 7]],
+  ['scratchet', [5, 6, 7]],
+  ['kitsunoh', [4, 5, 6, 7]],
+  ['fidgit', [4, 5, 6, 7]],
+  ['cyclohm', [4, 5, 6, 7]],
+  ['tactite', [4, 5, 6, 7]],
+  ['arghonaut', [4, 5, 6, 7]],
+  ['floatoy', [6, 7]],
+  ['necturine', [5, 6, 7]],
+  ['snugglow', [6, 7]],
+  ['breezi', [4, 5, 6, 7]],
+  ['caribolt', [7]],
+  ['flarelm', [4, 5, 6, 7]],
+  ['malaconda', [5, 6, 7]],
+  ['necturna', [5, 6, 7]],
+  ['pyroak', [4, 5, 6, 7]],
+  ['tomohawk', [5, 6, 7]],
+  ['mumbao', [7]],
+  ['pluffle', [6, 7]],
+  ['jumbao', [7]],
+  ['kerfluffle', [6, 7]],
+  ['stratagem', [4, 5, 6, 7]],
+  ['crucibelle', [6, 7]],
+  ['krilowatt', [4, 5, 6, 7]],
+  ['cawdet', [5, 6, 7]],
+  ['syclar', [4, 5, 6, 7]],
+  ['plasmanta', [6, 7]],
+  ['rebble', [4, 5, 6, 7]],
+  ['cawmodore', [5, 6, 7]],
+  ['equilibra', [7]],
+  ['revenankh', [4, 5, 6, 7]],
+  ['embirch', [4, 5, 6, 7]],
+  ['snaelstrom', [7]],
+  ['caimanoe', [6, 7]],
+  ['colossoil', [4, 5, 6, 7]],
+  ['smokomodo', [7]],
+  ['naviathan', [6, 7]],
+  ['voodoll', [4, 5, 6, 7]],
+  // TODO Double check later.
+  ['fawnifer', [7]],
+  ['electrelk', [7]],
+  ['smogecko', [7]],
+  ['smoguana', [7]],
+  ['swirlpool', [7]],
+  ['coribalis', [7]],
+
+  // Moves
+  ['paleowave', [4, 5, 6, 7]],
+  ['shadowstrike', [4, 5, 6, 7]],
+
+  // Abilities
+  ['mountaineer', [4, 5, 6, 7]],
+  ['rebound', [4, 5, 6, 7]],
+  ['persistent', [4, 5, 6, 7]],
+
+  // Items
+  ['crucibellite', [6, 7]],
+]);
+
 function filterPSDex(dex: PSDex) {
   for (const gen of GENERATIONS) {
     for (const k of DATAKINDS) {
       const map = dex[gen][k];
       for (const id in dex[gen][k]) {
         const obj = map[id];
-        if ((obj.gen !== undefined && gen < obj.gen) || !PREDS[gen][k](obj)) {
+
+        const supplementalGens = idGens.get(id);
+
+        if (
+          (obj.gen !== undefined && gen < obj.gen) ||
+          (supplementalGens !== undefined && !supplementalGens.includes(gen)) ||
+          !PREDS[gen][k](obj)
+        ) {
           delete map[id];
         } else {
           if (gen !== 7) {
@@ -275,6 +358,7 @@ function makeMap(dex: Record<DataKind, IDMap>) {
 }
 
 export type MoveCategory = 'Physical' | 'Special' | 'Status';
+export type Nonstandard = 'CAP' | null;
 
 export type PSExt = {
   gens: {
@@ -289,9 +373,10 @@ export type PSExt = {
     abilities: 'present';
     learnset: 'present';
     baseStats: StatsTable;
+    isNonstandard: Nonstandard;
   };
-  abilities: { name: string; shortDesc: string; desc: string };
-  items: { name: string; shortDesc: string; desc: string };
+  abilities: { name: string; shortDesc: string; desc: string; isNonstandard: Nonstandard };
+  items: { name: string; shortDesc: string; desc: string; isNonstandard: Nonstandard };
   moves: {
     name: string;
     shortDesc: string;
@@ -305,6 +390,7 @@ export type PSExt = {
     zMove: {
       power: number;
     } | null;
+    isNonstandard: Nonstandard;
   };
   types: { name: string };
 };
@@ -322,6 +408,7 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
       types: [],
       learnset: [],
       baseStats: specieIn.baseStats,
+      isNonstandard: specieIn.isNonstandard ?? null,
     };
 
     const prevoId = dexMap.species.get(specieIn.prevo);
@@ -377,6 +464,7 @@ function transformAbilities(
       name: abilityIn.name,
       shortDesc: abilityIn.shortDesc ?? abilityIn.desc,
       desc: abilityIn.desc ?? abilityIn.shortDesc,
+      isNonstandard: abilityIn.isNonstandard ?? null,
     };
 
     abilitiesOut.push(abilityOut);
@@ -393,6 +481,7 @@ function transformItems(dexMap: DexMap, itemsIn: IDMap): Array<Dex.Item<'Plain',
       name: itemIn.name,
       shortDesc: itemIn.shortDesc ?? itemIn.desc,
       desc: itemIn.desc ?? itemIn.shortDesc,
+      isNonstandard: itemIn.isNonstandard ?? null,
     };
 
     itemsOut.push(itemOut);
@@ -425,6 +514,7 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
               power: moveIn.zMovePower,
             }
           : null,
+      isNonstandard: moveIn.isNonstandard ?? null,
     };
 
     movesOut.push(moveOut);
