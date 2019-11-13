@@ -268,9 +268,9 @@ function makeMap(dex: Record<DataKind, IDMap>) {
   return dexMap;
 }
 
-type MoveCategory = 'Physical' | 'Special' | 'Status';
+export type MoveCategory = 'Physical' | 'Special' | 'Status';
 
-type PSExt = {
+export type PSExt = {
   gens: {
     num: GenerationNumber;
   };
