@@ -445,6 +445,7 @@ export type PSExt = {
     learnset: 'present';
     baseStats: StatsTable;
     isNonstandard: Nonstandard;
+    isBattleOnly: boolean;
   };
   abilities: { name: string; shortDesc: string; desc: string; isNonstandard: Nonstandard };
   items: { name: string; shortDesc: string; desc: string; isNonstandard: Nonstandard };
@@ -480,6 +481,7 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
       learnset: [],
       baseStats: specieIn.baseStats,
       isNonstandard: specieIn.isNonstandard ?? null,
+      isBattleOnly: specieIn.battleOnly ?? isMega(specieIn),
     };
 
     const prevoId = dexMap.species.get(specieIn.prevo);
