@@ -208,6 +208,7 @@ class Species extends SpeciesBase {
         abilities: abilitiesSym,
         types: typesSym,
         learnset: learnsetSym,
+        altBattleFormes: altBattleFormesSym,
       },
       this,
       specie
