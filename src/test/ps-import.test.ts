@@ -60,8 +60,8 @@ describe('ps-import', () => {
     const venusaurMega = getGen(7).species.find1(x => x.name === 'Venusaur-Mega');
     expect(venusaur.isBattleOnly).toBe(false);
     expect(venusaurMega.isBattleOnly).toBe(true);
-    expect(venusaur.altBattleFormes).toStrictEqual([venusaurMega]);
-    expect(venusaurMega.altBattleFormes).toStrictEqual([venusaur]);
+    expect(venusaur.altBattleFormes[0]).toBe(venusaurMega);
+    expect(venusaurMega.altBattleFormes[0]).toBe(venusaur);
     // shouldn't include out-of-battle otherFormes
     expect(getGen(7).species.find1(x => x.name === 'Rotom').altBattleFormes).toStrictEqual([]);
   });
