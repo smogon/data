@@ -372,9 +372,12 @@ function mergeMap(map1: IDMap, map2: IDMap) {
   }
 }
 
+// Basically any transformations that must be done before reference resolution,
+// maybe a better name is possible than filter. After this point
+// generation-agnostic processing should be possible
 function filterPSDex(dex: PSDexStage1): PSDexStage2 {
   for (const gen of GENERATIONS) {
-    // The merge here must happen after inheritance!
+    // The merge here must happen after inheritance, and before predicates (isNonstandard)
     mergeMap(dex[gen].species, dex[gen].formatsData);
     delete dex[gen].formatsData;
 
@@ -389,7 +392,9 @@ function filterPSDex(dex: PSDexStage1): PSDexStage2 {
         const supplementalGens = idGens.get(id);
 
         if (
+          // If PS has explicitly marked what gens this is in, & its not in those gens, exclude
           (obj.gen !== undefined && gen < obj.gen) ||
+          //
           (supplementalGens !== undefined && !supplementalGens.includes(gen)) ||
           !PREDS[k](gen, obj)
         ) {
