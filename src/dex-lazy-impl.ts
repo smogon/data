@@ -1,7 +1,17 @@
+// If all sources for an id are null, then it isn't a member of this
+// generation. If one source has null and another has a record, then the null
+// contributes nothing.
+//
+// TODO: allow an object ("sparse") representation
+//
+// TODO: support generational deltas, but need a mask of which objects are in
+// the generation
+type Delta<T> = Array<T | null>;
+
 class Transformer<Src, Dest> {
   constructor(
-    private source: Src[][],
-    private fn: (dv: Src[]) => Dest,
+    private source: Array<Delta<Src>>,
+    private fn: (dv: Delta<Src>) => Dest,
     private cache: Dest[] = []
   ) {}
 
@@ -11,18 +21,28 @@ class Transformer<Src, Dest> {
       return v;
     }
 
+    // TODO: don't allocate here; rely on this.fn rejecting if no sources?
     const sources = [];
     for (const source of this.source) {
-      if (source === null) continue;
       const dv = source[id];
-      if (dv === undefined) {
-        throw new Error(`Cannot resolve ${id}`);
+      if (dv === undefined || dv === null) {
+        continue;
       }
       sources.push(dv);
     }
 
+    if (sources.length === 0) {
+      return undefined;
+    }
+
     v = this.fn(sources);
     this.cache[id] = v;
+    return v;
+  }
+
+  resolve(id: number) {
+    const v = this.get(id);
+    if (v === undefined) throw new Error(`Cannot resolve ${id}`);
     return v;
   }
 
@@ -44,23 +64,27 @@ class Transformer<Src, Dest> {
   }
 
   *[Symbol.iterator]() {
+    // TODO: more efficient hole skipping
     let length = 0;
     for (const source of this.source) {
-      if (source !== null) {
-        // For now, assume all that sources have the same length
-        length = source.length;
-        break;
-      }
+      length = Math.max(length, source.length);
     }
 
     for (let i = 0; i < length; i++) {
-      yield this.get(i);
+      const v = this.get(i);
+      if (v === undefined) continue;
+      yield v;
     }
   }
 }
 
-function assignRemap(remap: Record<string, symbol>, dest: any, srcs: any[]) {
+function assignRemap(
+  remap: Record<string, symbol>,
+  dest: any,
+  srcs: Delta<Record<string, unknown>>
+) {
   for (const src of srcs) {
+    // src can be null, reminder that for-in on null is a no-op
     for (const k in src) {
       if (k in remap) {
         dest[remap[k]] = src[k];
@@ -162,37 +186,37 @@ class SpeciesBase extends GenerationalBase {
     const v = this[prevoSym];
     if (v === undefined) throw new Error('prevo not loaded yet');
     if (v === null) return null;
-    return this.gen.species.get(v);
+    return this.gen.species.resolve(v);
   }
 
   get evos() {
     const v = this[evosSym];
     if (v === undefined) throw new Error('evos not loaded yet');
-    return v.map(id => this.gen.species.get(id));
+    return v.map(id => this.gen.species.resolve(id));
   }
 
   get abilities() {
     const v = this[abilitiesSym];
     if (v === undefined) throw new Error('abilities not loaded yet');
-    return v.map(id => this.gen.abilities.get(id));
+    return v.map(id => this.gen.abilities.resolve(id));
   }
 
   get types() {
     const v = this[typesSym];
     if (v === undefined) throw new Error('types not loaded yet');
-    return v.map(id => this.gen.types.get(id));
+    return v.map(id => this.gen.types.resolve(id));
   }
 
   get learnset() {
     const v = this[learnsetSym];
     if (v === undefined) throw new Error('learnset not loaded yet');
-    return v.map(id => this.gen.moves.get(id));
+    return v.map(id => this.gen.moves.resolve(id));
   }
 
   get altBattleFormes() {
     const v = this[altBattleFormesSym];
     if (v === undefined) throw new Error('learnset not loaded yet');
-    return v.map(id => this.gen.species.get(id));
+    return v.map(id => this.gen.species.resolve(id));
   }
 }
 
@@ -248,7 +272,7 @@ class MoveBase extends GenerationalBase {
   get type() {
     const v = this[typeSym];
     if (v === undefined) throw new Error('type not loaded yet');
-    return this.gen.types.get(v);
+    return this.gen.types.resolve(v);
   }
 }
 

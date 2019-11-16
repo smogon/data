@@ -27,6 +27,17 @@ describe('lazy impl', () => {
             prevo: 1,
             evos: [],
           },
+          null,
+          {
+            name: 'Slowpoke',
+            prevo: 1,
+            evos: [5],
+          },
+          {
+            name: 'Slowbro',
+            prevo: 4,
+            evos: [],
+          },
         ],
       },
     ],
@@ -45,6 +56,13 @@ describe('lazy impl', () => {
           {
             heightm: 1.7,
           },
+          null,
+          {
+            heightm: 1.2,
+          },
+          {
+            heightm: 1.6,
+          },
         ],
       },
     ],
@@ -62,5 +80,11 @@ describe('lazy impl', () => {
     expect(specie.heightm).toBe(0.6);
     expect(specie.evos[0].name).toBe('Charmeleon');
     expect(specie.evos[0].heightm).toBe(1.1);
+  });
+
+  test('ignores holes', () => {
+    const gen1 = dex.gens.find1(({ num }) => num === 1);
+    expect(gen1.species.find(({ name }) => name === 'Slowpoke')).toBeDefined();
+    expect(Array.from(gen1.species).length).toBe(5);
   });
 });

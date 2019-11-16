@@ -67,7 +67,8 @@ type Backref<K extends Format, Field extends string, T> = {
   Plain: {};
   Rich: Record<Field, T>;
 }[K];
-type Collection<K extends Format, T> = { Plain: T[]; Rich: Store<T> }[K];
+// TODO: move delta here
+type Collection<K extends Format, T> = { Plain: Array<T | null>; Rich: Store<T> }[K];
 
 export interface Dex<K extends Format, Ext extends ExtSpec = {}> {
   gens: Collection<K, Generation<K, Ext>>;
