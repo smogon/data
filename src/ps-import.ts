@@ -92,6 +92,14 @@ function inheritMap(mapFrom: IDMap, mapTo: IDMap) {
   }
 }
 
+function mergeMap(map1: IDMap, map2: IDMap) {
+  // Must be map1, we want to ignore entries in map2 that don't exist
+  // for example, formats-data has mons that don't exist in pokedex
+  for (const id in map1) {
+    Object.assign(map1[id], map2[id]);
+  }
+}
+
 // pairs([A, B, C]) = [{from: A, to: B}, {from: B, to: C}]
 function* pairs<T>(array: T[]) {
   for (let i = 0; i < array.length - 1; i++) {
@@ -99,12 +107,25 @@ function* pairs<T>(array: T[]) {
   }
 }
 
-function inheritPSDex(dex: PSDexStage1) {
+function inheritPSDex(dex: PSDexStage1): PSDexStage2 {
   for (const { from: genFrom, to: genTo } of pairs(Array.from(GENERATIONS).reverse())) {
     for (const k of [...DATAKINDS, ...EXTRAKINDS]) {
       inheritMap(dex[genFrom][k], dex[genTo][k]);
     }
   }
+
+  for (const gen of GENERATIONS) {
+    // The merge here must happen after inheritance.  Also, it must happen
+    // before generation filtering, as (at least) the isNonstandard property is
+    // used
+    mergeMap(dex[gen].species, dex[gen].formatsData);
+    delete dex[gen].formatsData;
+
+    mergeMap(dex[gen].species, dex[gen].learnsets);
+    delete dex[gen].learnsets;
+  }
+
+  return dex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,26 +385,9 @@ const idGens = new Map([
   ['crucibellite', [6, 7]],
 ]);
 
-function mergeMap(map1: IDMap, map2: IDMap) {
-  // Must be map1, we want to ignore entries in map2 that don't exist
-  // for example, formats-data has mons that don't exist in pokedex
-  for (const id in map1) {
-    Object.assign(map1[id], map2[id]);
-  }
-}
-
-// Basically any transformations that must be done before reference resolution,
-// maybe a better name is possible than filter. After this point
-// generation-agnostic processing should be possible
-function filterPSDex(dex: PSDexStage1): PSDexStage2 {
+//  After this point generation-agnostic processing should be possible
+function filterPSDex(dex: PSDexStage2) {
   for (const gen of GENERATIONS) {
-    // The merge here must happen after inheritance, and before predicates (isNonstandard)
-    mergeMap(dex[gen].species, dex[gen].formatsData);
-    delete dex[gen].formatsData;
-
-    mergeMap(dex[gen].species, dex[gen].learnsets);
-    delete dex[gen].learnsets;
-
     for (const k of DATAKINDS) {
       const map = dex[gen][k];
       for (const id in dex[gen][k]) {
@@ -411,8 +415,6 @@ function filterPSDex(dex: PSDexStage1): PSDexStage2 {
       }
     }
   }
-
-  return dex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -697,9 +699,8 @@ function transformPSDex(dexIn: PSDexStage2): Dex.Dex<'Plain', PSExt> {
 ////////////////////////////////////////////////////////////////////////////////
 
 export default function(psDataDir: string): Dex.Dex<'Plain', PSExt> {
-  const dexIn1 = requirePSDex(psDataDir);
-  inheritPSDex(dexIn1);
-  const dexIn2 = filterPSDex(dexIn1);
-  const dexOut = transformPSDex(dexIn2);
+  const dexIn = inheritPSDex(requirePSDex(psDataDir));
+  filterPSDex(dexIn);
+  const dexOut = transformPSDex(dexIn);
   return dexOut;
 }
