@@ -500,183 +500,181 @@ function isBattleOnly(specieIn: any) {
   return specieIn.battleOnly ?? isMega(specieIn);
 }
 
-function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'Plain', PSExt>> {
-  const speciesOut: Array<Dex.Species<'Plain', PSExt>> = [];
+const TRANSFORMS = {
+  species(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'Plain', PSExt>> {
+    const speciesOut: Array<Dex.Species<'Plain', PSExt>> = [];
 
-  for (const [id, specieIn] of Object.entries(speciesIn)) {
-    // Sometimes other formes don't have tiers. Find its parent forme
-    if (specieIn.tier === undefined) {
-      for (const [id2, specieIn2] of Object.entries(speciesIn)) {
-        for (const otherForme of specieIn2.otherFormes ?? []) {
-          if (otherForme === id) {
-            specieIn.tier = specieIn2.tier;
-          }
-        }
-      }
-    }
-
-    const specieOut: Dex.Species<'Plain', PSExt> = {
-      num: specieIn.num,
-      name: specieIn.species,
-      prevo: null,
-      evos: [],
-      abilities: [],
-      types: [],
-      learnset: [],
-      baseStats: specieIn.baseStats,
-      isNonstandard: specieIn.isNonstandard ?? null,
-      isBattleOnly: isBattleOnly(specieIn),
-      altBattleFormes: [],
-      tier: specieIn.tier,
-      // Can be undefined
-      // doublesTier: specieIn.doublesTier
-    };
-
-    if (!isBattleOnly(specieIn)) {
-      for (const otherForme of specieIn.otherFormes ?? []) {
-        // PS mixes in-battle & out-of-battle formes, untangle
-        const formeId = dexMap.species.get(otherForme);
-        if (formeId !== undefined && isBattleOnly(speciesIn[otherForme])) {
-          specieOut.altBattleFormes.push(formeId);
-        }
-      }
-    } else {
-      // No convenient indexing; loop through and find what we are an otherForme of.
-      for (const [id2, specieIn2] of Object.entries(speciesIn)) {
-        if (isBattleOnly(specieIn2)) continue;
-        for (const otherForme of specieIn2.otherFormes ?? []) {
-          if (otherForme === id) {
-            // Guaranteed to be in this gen, silence type checker
-            specieOut.altBattleFormes.push(dexMap.species.get(id2)!);
-          }
-        }
-      }
-    }
-
-    const prevoId = dexMap.species.get(specieIn.prevo);
-    if (prevoId !== undefined) {
-      specieOut.prevo = prevoId;
-    }
-
-    if (specieIn.evos !== undefined) {
-      for (const evo of specieIn.evos) {
-        const evoId = dexMap.species.get(evo);
-        if (evoId !== undefined) {
-          specieOut.evos.push(evoId);
-        }
-      }
-    }
-
-    for (const ability of Object.values(specieIn.abilities)) {
-      const abilityId = dexMap.abilities.get(toID(ability as string));
-      if (abilityId !== undefined) {
-        specieOut.abilities.push(abilityId);
-      }
-    }
-
-    for (const type of specieIn.types) {
-      const typeId = dexMap.types.get(toID(type as string));
-      if (typeId !== undefined) {
-        specieOut.types.push(typeId);
-      }
-    }
-
-    for (const move in specieIn.learnset) {
-      const moveId = dexMap.moves.get(toID(move as string));
-      if (moveId !== undefined) {
-        specieOut.learnset.push(moveId);
-      }
-    }
-
-    speciesOut.push(specieOut);
-  }
-
-  return speciesOut;
-}
-
-function transformAbilities(
-  dexMap: DexMap,
-  abilitiesIn: IDMap
-): Array<Dex.Ability<'Plain', PSExt>> {
-  const abilitiesOut: Array<Dex.Ability<'Plain', PSExt>> = [];
-
-  for (const abilityIn of Object.values(abilitiesIn)) {
-    const abilityOut: Dex.Ability<'Plain', PSExt> = {
-      name: abilityIn.name,
-      shortDesc: abilityIn.shortDesc ?? abilityIn.desc,
-      desc: abilityIn.desc ?? abilityIn.shortDesc,
-      isNonstandard: abilityIn.isNonstandard ?? null,
-    };
-
-    abilitiesOut.push(abilityOut);
-  }
-
-  return abilitiesOut;
-}
-
-function transformItems(dexMap: DexMap, itemsIn: IDMap): Array<Dex.Item<'Plain', PSExt>> {
-  const itemsOut: Array<Dex.Item<'Plain', PSExt>> = [];
-
-  for (const itemIn of Object.values(itemsIn)) {
-    const itemOut: Dex.Item<'Plain', PSExt> = {
-      name: itemIn.name,
-      shortDesc: itemIn.shortDesc ?? itemIn.desc,
-      desc: itemIn.desc ?? itemIn.shortDesc,
-      isNonstandard: itemIn.isNonstandard ?? null,
-    };
-
-    itemsOut.push(itemOut);
-  }
-
-  return itemsOut;
-}
-
-function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain', PSExt>> {
-  const movesOut: Array<Dex.Move<'Plain', PSExt>> = [];
-
-  for (const moveIn of Object.values(movesIn)) {
-    // TODO, add to old gen typechart?
-    if (moveIn.type === '???') {
-      moveIn.type = 'Normal';
-    }
-    const moveOut: Dex.Move<'Plain', PSExt> = {
-      name: moveIn.name,
-      type: dexMap.types.get(toID(moveIn.type) as string) as number,
-      shortDesc: moveIn.shortDesc ?? moveIn.desc,
-      desc: moveIn.desc ?? moveIn.shortDesc,
-      basePower: moveIn.basePower,
-      accuracy: moveIn.accuracy === true ? 'Bypass' : moveIn.accuracy,
-      pp: moveIn.pp,
-      priority: moveIn.priority,
-      category: moveIn.category,
-      zMove:
-        moveIn.zMovePower !== undefined
-          ? {
-              power: moveIn.zMovePower,
+    for (const [id, specieIn] of Object.entries(speciesIn)) {
+      // Sometimes other formes don't have tiers. Find its parent forme
+      if (specieIn.tier === undefined) {
+        for (const [id2, specieIn2] of Object.entries(speciesIn)) {
+          for (const otherForme of specieIn2.otherFormes ?? []) {
+            if (otherForme === id) {
+              specieIn.tier = specieIn2.tier;
             }
-          : null,
-      isNonstandard: moveIn.isNonstandard ?? null,
-    };
+          }
+        }
+      }
 
-    movesOut.push(moveOut);
-  }
+      const specieOut: Dex.Species<'Plain', PSExt> = {
+        num: specieIn.num,
+        name: specieIn.species,
+        prevo: null,
+        evos: [],
+        abilities: [],
+        types: [],
+        learnset: [],
+        baseStats: specieIn.baseStats,
+        isNonstandard: specieIn.isNonstandard ?? null,
+        isBattleOnly: isBattleOnly(specieIn),
+        altBattleFormes: [],
+        tier: specieIn.tier,
+        // Can be undefined
+        // doublesTier: specieIn.doublesTier
+      };
 
-  return movesOut;
-}
+      if (!isBattleOnly(specieIn)) {
+        for (const otherForme of specieIn.otherFormes ?? []) {
+          // PS mixes in-battle & out-of-battle formes, untangle
+          const formeId = dexMap.species.get(otherForme);
+          if (formeId !== undefined && isBattleOnly(speciesIn[otherForme])) {
+            specieOut.altBattleFormes.push(formeId);
+          }
+        }
+      } else {
+        // No convenient indexing; loop through and find what we are an otherForme of.
+        for (const [id2, specieIn2] of Object.entries(speciesIn)) {
+          if (isBattleOnly(specieIn2)) continue;
+          for (const otherForme of specieIn2.otherFormes ?? []) {
+            if (otherForme === id) {
+              // Guaranteed to be in this gen, silence type checker
+              specieOut.altBattleFormes.push(dexMap.species.get(id2)!);
+            }
+          }
+        }
+      }
 
-function transformTypes(dexMap: DexMap, typesIn: IDMap): Array<Dex.Type<'Plain', PSExt>> {
-  const typesOut: Array<Dex.Type<'Plain', PSExt>> = [];
+      const prevoId = dexMap.species.get(specieIn.prevo);
+      if (prevoId !== undefined) {
+        specieOut.prevo = prevoId;
+      }
 
-  for (const typeIn of Object.values(typesIn)) {
-    const typeOut: Dex.Type<'Plain', PSExt> = {
-      name: typeIn.name,
-    };
+      if (specieIn.evos !== undefined) {
+        for (const evo of specieIn.evos) {
+          const evoId = dexMap.species.get(evo);
+          if (evoId !== undefined) {
+            specieOut.evos.push(evoId);
+          }
+        }
+      }
 
-    typesOut.push(typeOut);
-  }
+      for (const ability of Object.values(specieIn.abilities)) {
+        const abilityId = dexMap.abilities.get(toID(ability as string));
+        if (abilityId !== undefined) {
+          specieOut.abilities.push(abilityId);
+        }
+      }
 
-  return typesOut;
-}
+      for (const type of specieIn.types) {
+        const typeId = dexMap.types.get(toID(type as string));
+        if (typeId !== undefined) {
+          specieOut.types.push(typeId);
+        }
+      }
+
+      for (const move in specieIn.learnset) {
+        const moveId = dexMap.moves.get(toID(move as string));
+        if (moveId !== undefined) {
+          specieOut.learnset.push(moveId);
+        }
+      }
+
+      speciesOut.push(specieOut);
+    }
+
+    return speciesOut;
+  },
+
+  abilities(dexMap: DexMap, abilitiesIn: IDMap): Array<Dex.Ability<'Plain', PSExt>> {
+    const abilitiesOut: Array<Dex.Ability<'Plain', PSExt>> = [];
+
+    for (const abilityIn of Object.values(abilitiesIn)) {
+      const abilityOut: Dex.Ability<'Plain', PSExt> = {
+        name: abilityIn.name,
+        shortDesc: abilityIn.shortDesc ?? abilityIn.desc,
+        desc: abilityIn.desc ?? abilityIn.shortDesc,
+        isNonstandard: abilityIn.isNonstandard ?? null,
+      };
+
+      abilitiesOut.push(abilityOut);
+    }
+
+    return abilitiesOut;
+  },
+
+  items(dexMap: DexMap, itemsIn: IDMap): Array<Dex.Item<'Plain', PSExt>> {
+    const itemsOut: Array<Dex.Item<'Plain', PSExt>> = [];
+
+    for (const itemIn of Object.values(itemsIn)) {
+      const itemOut: Dex.Item<'Plain', PSExt> = {
+        name: itemIn.name,
+        shortDesc: itemIn.shortDesc ?? itemIn.desc,
+        desc: itemIn.desc ?? itemIn.shortDesc,
+        isNonstandard: itemIn.isNonstandard ?? null,
+      };
+
+      itemsOut.push(itemOut);
+    }
+
+    return itemsOut;
+  },
+
+  moves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain', PSExt>> {
+    const movesOut: Array<Dex.Move<'Plain', PSExt>> = [];
+
+    for (const moveIn of Object.values(movesIn)) {
+      // TODO, add to old gen typechart?
+      if (moveIn.type === '???') {
+        moveIn.type = 'Normal';
+      }
+      const moveOut: Dex.Move<'Plain', PSExt> = {
+        name: moveIn.name,
+        type: dexMap.types.get(toID(moveIn.type) as string) as number,
+        shortDesc: moveIn.shortDesc ?? moveIn.desc,
+        desc: moveIn.desc ?? moveIn.shortDesc,
+        basePower: moveIn.basePower,
+        accuracy: moveIn.accuracy === true ? 'Bypass' : moveIn.accuracy,
+        pp: moveIn.pp,
+        priority: moveIn.priority,
+        category: moveIn.category,
+        zMove:
+          moveIn.zMovePower !== undefined
+            ? {
+                power: moveIn.zMovePower,
+              }
+            : null,
+        isNonstandard: moveIn.isNonstandard ?? null,
+      };
+
+      movesOut.push(moveOut);
+    }
+
+    return movesOut;
+  },
+  types(dexMap: DexMap, typesIn: IDMap): Array<Dex.Type<'Plain', PSExt>> {
+    const typesOut: Array<Dex.Type<'Plain', PSExt>> = [];
+
+    for (const typeIn of Object.values(typesIn)) {
+      const typeOut: Dex.Type<'Plain', PSExt> = {
+        name: typeIn.name,
+      };
+
+      typesOut.push(typeOut);
+    }
+
+    return typesOut;
+  },
+};
 
 // Fill holes in array with null, so it is JSON roundtrippable
 function fillArray<T>(arr: Array<T | null>) {
@@ -690,15 +688,11 @@ function transformPSDex(dexIn: PSDexStage2): Dex.Dex<'Plain', PSExt> {
   for (const gen of GENERATIONS) {
     const genIn = dexIn[gen];
     const genMap = makeMap(genIn);
-    const genOut: Dex.Generation<'Plain', PSExt> = {
+    const genOut = {
       num: gen,
-      species: transformSpecies(genMap, genIn.species),
-      abilities: transformAbilities(genMap, genIn.abilities),
-      items: transformItems(genMap, genIn.items),
-      moves: transformMoves(genMap, genIn.moves),
-      types: transformTypes(genMap, genIn.types),
-    };
+    } as Dex.Generation<'Plain', PSExt>;
     for (const k of DATAKINDS) {
+      genOut[k] = TRANSFORMS[k](genMap, genIn[k]) as any;
       fillArray(genOut[k]);
     }
     dexOut.gens.push(genOut);
