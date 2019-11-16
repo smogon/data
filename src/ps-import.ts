@@ -503,11 +503,9 @@ const TRANSFORMS = {
 
     // Sometimes other formes don't have tiers. Find its parent forme
     if (specieIn.tier === undefined) {
-      for (const [id2, specieIn2] of Object.entries(dexIn.species)) {
-        for (const otherForme of specieIn2.otherFormes ?? []) {
-          if (otherForme === id) {
-            specieIn.tier = specieIn2.tier;
-          }
+      for (const specieIn2 of Object.values(dexIn.species)) {
+        if (specieIn2.otherFormes?.includes(id)) {
+          specieIn.tier = specieIn2.tier;
         }
       }
     }
@@ -515,7 +513,7 @@ const TRANSFORMS = {
     const specieOut: Dex.Species<'Plain', PSExt> = {
       num: specieIn.num,
       name: specieIn.species,
-      prevo: dexIn.species[specieIn.prevo]?.__id ?? null,
+      prevo: dexIn.species[specieIn.prevo ?? '']?.__id ?? null,
       evos: [],
       abilities: [],
       types: [],
@@ -532,48 +530,46 @@ const TRANSFORMS = {
     if (!isBattleOnly(specieIn)) {
       for (const otherForme of specieIn.otherFormes ?? []) {
         // PS mixes in-battle & out-of-battle formes, untangle
-        const formeId = dexIn.species[otherForme]?.__id;
-        if (formeId !== undefined && isBattleOnly(dexIn.species[otherForme])) {
-          specieOut.altBattleFormes.push(formeId);
+        const forme = dexIn.species[otherForme];
+        if (forme !== undefined && isBattleOnly(forme)) {
+          specieOut.altBattleFormes.push(forme.__id);
         }
       }
     } else {
       // No convenient indexing; loop through and find what we are an otherForme of.
       for (const specieIn2 of Object.values(dexIn.species)) {
         if (isBattleOnly(specieIn2)) continue;
-        for (const otherForme of specieIn2.otherFormes ?? []) {
-          if (otherForme === id) {
-            specieOut.altBattleFormes.push(specieIn2.__id);
-          }
+        if (specieIn2.otherFormes?.includes(id)) {
+          specieOut.altBattleFormes.push(specieIn2.__id);
         }
       }
     }
 
-    for (const evo of specieIn.evos ?? []) {
-      const evoId = dexIn.species[evo]?.__id;
-      if (evoId !== undefined) {
-        specieOut.evos.push(evoId);
+    for (const evoId of specieIn.evos ?? []) {
+      const evo = dexIn.species[evoId];
+      if (evo !== undefined) {
+        specieOut.evos.push(evo.__id);
       }
     }
 
-    for (const ability of Object.values(specieIn.abilities)) {
-      const abilityId = dexIn.abilities[toID(ability as string)]?.__id;
-      if (abilityId !== undefined) {
-        specieOut.abilities.push(abilityId);
+    for (const abilityName of Object.values(specieIn.abilities)) {
+      const ability = dexIn.abilities[toID(abilityName as string)];
+      if (ability !== undefined) {
+        specieOut.abilities.push(ability.__id);
       }
     }
 
-    for (const type of specieIn.types) {
-      const typeId = dexIn.types[toID(type as string)]?.__id;
-      if (typeId !== undefined) {
-        specieOut.types.push(typeId);
+    for (const typeName of specieIn.types) {
+      const type = dexIn.types[toID(typeName as string)];
+      if (type !== undefined) {
+        specieOut.types.push(type.__id);
       }
     }
 
-    for (const move in specieIn.learnset) {
-      const moveId = dexIn.moves[toID(move)]?.__id;
-      if (moveId !== undefined) {
-        specieOut.learnset.push(moveId);
+    for (const moveId in specieIn.learnset) {
+      const move = dexIn.moves[moveId];
+      if (move !== undefined) {
+        specieOut.learnset.push(move.__id);
       }
     }
 
@@ -605,7 +601,7 @@ const TRANSFORMS = {
     }
     return {
       name: moveIn.name,
-      type: dexIn.types[toID(moveIn.type)]?.__id,
+      type: dexIn.types[toID(moveIn.type)].__id,
       shortDesc: moveIn.shortDesc ?? moveIn.desc,
       desc: moveIn.desc ?? moveIn.shortDesc,
       basePower: moveIn.basePower,
