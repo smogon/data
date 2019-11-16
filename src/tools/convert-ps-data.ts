@@ -13,7 +13,7 @@ if (psDataDir === undefined || exportDir === undefined) {
 
 const data = psImport(psDataDir);
 
+fs.mkdirSync(exportDir, { recursive: true });
 for (const gen of data.gens) {
-  fs.mkdirSync(exportDir, { recursive: true });
   fs.writeFileSync(path.join(exportDir, `${gen.num}.json`), detStringify(gen, { space: '  ' }));
 }
