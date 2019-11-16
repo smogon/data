@@ -600,7 +600,7 @@ function transformAbilities(
 ): Array<Dex.Ability<'Plain', PSExt>> {
   const abilitiesOut: Array<Dex.Ability<'Plain', PSExt>> = [];
 
-  for (const [id, abilityIn] of Object.entries(abilitiesIn)) {
+  for (const abilityIn of Object.values(abilitiesIn)) {
     const abilityOut: Dex.Ability<'Plain', PSExt> = {
       name: abilityIn.name,
       shortDesc: abilityIn.shortDesc ?? abilityIn.desc,
@@ -617,7 +617,7 @@ function transformAbilities(
 function transformItems(dexMap: DexMap, itemsIn: IDMap): Array<Dex.Item<'Plain', PSExt>> {
   const itemsOut: Array<Dex.Item<'Plain', PSExt>> = [];
 
-  for (const [id, itemIn] of Object.entries(itemsIn)) {
+  for (const itemIn of Object.values(itemsIn)) {
     const itemOut: Dex.Item<'Plain', PSExt> = {
       name: itemIn.name,
       shortDesc: itemIn.shortDesc ?? itemIn.desc,
@@ -634,7 +634,7 @@ function transformItems(dexMap: DexMap, itemsIn: IDMap): Array<Dex.Item<'Plain',
 function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain', PSExt>> {
   const movesOut: Array<Dex.Move<'Plain', PSExt>> = [];
 
-  for (const [id, moveIn] of Object.entries(movesIn)) {
+  for (const moveIn of Object.values(movesIn)) {
     // TODO, add to old gen typechart?
     if (moveIn.type === '???') {
       moveIn.type = 'Normal';
@@ -667,7 +667,7 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
 function transformTypes(dexMap: DexMap, typesIn: IDMap): Array<Dex.Type<'Plain', PSExt>> {
   const typesOut: Array<Dex.Type<'Plain', PSExt>> = [];
 
-  for (const [id, typeIn] of Object.entries(typesIn)) {
+  for (const typeIn of Object.values(typesIn)) {
     const typeOut: Dex.Type<'Plain', PSExt> = {
       name: typeIn.name,
     };
