@@ -12,9 +12,13 @@ import * as Dex from './dex-interfaces';
 const DATAKINDS = ['species', 'abilities', 'items', 'moves', 'types'] as const;
 type DataKind = typeof DATAKINDS[number];
 
+const EXTRAKINDS = ['formatsData', 'learnsets'] as const;
+type ExtraKind = typeof EXTRAKINDS[number];
+
 // This is generally an ID map, but in the case of types, it isn't
 type IDMap = Record<string, any>;
-type PSDex = Record<GenerationNumber, Record<DataKind, IDMap>>;
+type PSDexStage1 = Record<GenerationNumber, Record<DataKind | ExtraKind, IDMap>>;
+type PSDexStage2 = Record<GenerationNumber, Record<DataKind, IDMap>>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Loading
@@ -53,25 +57,13 @@ function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?
   }
 }
 
-function mergeMap(map1: IDMap, map2: IDMap) {
-  for (const id in map2) {
-    if (map1[id] === undefined) map1[id] = {};
-    Object.assign(map1[id], map2[id]);
-  }
-  return map1;
-}
-
-function requirePSDex(psDataDir: string) {
-  const dex = {} as PSDex;
+function requirePSDex(psDataDir: string): PSDexStage1 {
+  const dex = {} as PSDexStage1;
   for (const gen of GENERATIONS) {
     dex[gen] = {
-      species: mergeMap(
-        requireMap(psDataDir, gen, 'pokedex'),
-        mergeMap(
-          requireMap(psDataDir, gen, 'formats-data'),
-          requireMap(psDataDir, gen, 'learnsets')
-        )
-      ),
+      species: requireMap(psDataDir, gen, 'pokedex'),
+      formatsData: requireMap(psDataDir, gen, 'formats-data'),
+      learnsets: requireMap(psDataDir, gen, 'learnsets'),
       abilities: requireMap(psDataDir, gen, 'abilities'),
       items: requireMap(psDataDir, gen, 'items'),
       moves: requireMap(psDataDir, gen, 'moves'),
@@ -107,9 +99,9 @@ function* pairs<T>(array: T[]) {
   }
 }
 
-function inheritPSDex(dex: PSDex) {
+function inheritPSDex(dex: PSDexStage1) {
   for (const { from: genFrom, to: genTo } of pairs(Array.from(GENERATIONS).reverse())) {
-    for (const k of DATAKINDS) {
+    for (const k of [...DATAKINDS, ...EXTRAKINDS]) {
       inheritMap(dex[genFrom][k], dex[genTo][k]);
     }
   }
@@ -137,11 +129,6 @@ const PREDS = {
     }
 
     if (s.isNonstandard === 'Pokestar' && gen !== 5) {
-      return false;
-    }
-
-    // num filters out rockruffdusk, pokestargiant2, pokestargiantpropo2
-    if (s.num === undefined) {
       return false;
     }
 
@@ -377,8 +364,23 @@ const idGens = new Map([
   ['crucibellite', [6, 7]],
 ]);
 
-function filterPSDex(dex: PSDex) {
+function mergeMap(map1: IDMap, map2: IDMap) {
+  // Must be map1, we want to ignore entries in map2 that don't exist
+  // for example, formats-data has mons that don't exist in pokedex
+  for (const id in map1) {
+    Object.assign(map1[id], map2[id]);
+  }
+}
+
+function filterPSDex(dex: PSDexStage1): PSDexStage2 {
   for (const gen of GENERATIONS) {
+    // The merge here must happen after inheritance!
+    mergeMap(dex[gen].species, dex[gen].formatsData);
+    delete dex[gen].formatsData;
+
+    mergeMap(dex[gen].species, dex[gen].learnsets);
+    delete dex[gen].learnsets;
+
     for (const k of DATAKINDS) {
       const map = dex[gen][k];
       for (const id in dex[gen][k]) {
@@ -404,6 +406,8 @@ function filterPSDex(dex: PSDex) {
       }
     }
   }
+
+  return dex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -655,7 +659,7 @@ function transformTypes(dexMap: DexMap, typesIn: IDMap): Array<Dex.Type<'Plain',
   return typesOut;
 }
 
-function transformPSDex(dexIn: PSDex): Dex.Dex<'Plain', PSExt> {
+function transformPSDex(dexIn: PSDexStage2): Dex.Dex<'Plain', PSExt> {
   const dexOut: Dex.Dex<'Plain', PSExt> = { gens: [] };
   for (const gen of GENERATIONS) {
     const genIn = dexIn[gen];
@@ -678,9 +682,9 @@ function transformPSDex(dexIn: PSDex): Dex.Dex<'Plain', PSExt> {
 ////////////////////////////////////////////////////////////////////////////////
 
 export default function(psDataDir: string): Dex.Dex<'Plain', PSExt> {
-  const dexIn = requirePSDex(psDataDir);
-  inheritPSDex(dexIn);
-  filterPSDex(dexIn);
-  const dexOut = transformPSDex(dexIn);
+  const dexIn1 = requirePSDex(psDataDir);
+  inheritPSDex(dexIn1);
+  const dexIn2 = filterPSDex(dexIn1);
+  const dexOut = transformPSDex(dexIn2);
   return dexOut;
 }
