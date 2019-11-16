@@ -664,6 +664,13 @@ function transformTypes(dexMap: DexMap, typesIn: IDMap): Array<Dex.Type<'Plain',
   return typesOut;
 }
 
+// Fill holes in array with null, so it is JSON roundtrippable
+function fillArray<T>(arr: Array<T | null>) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === undefined) arr[i] = null;
+  }
+}
+
 function transformPSDex(dexIn: PSDexStage2): Dex.Dex<'Plain', PSExt> {
   const dexOut: Dex.Dex<'Plain', PSExt> = { gens: [] };
   for (const gen of GENERATIONS) {
@@ -677,6 +684,9 @@ function transformPSDex(dexIn: PSDexStage2): Dex.Dex<'Plain', PSExt> {
       moves: transformMoves(genMap, genIn.moves),
       types: transformTypes(genMap, genIn.types),
     };
+    for (const k of DATAKINDS) {
+      fillArray(genOut[k]);
+    }
     dexOut.gens.push(genOut);
   }
   return dexOut;
