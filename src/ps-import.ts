@@ -57,6 +57,20 @@ function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?
   }
 }
 
+// Typechart isn't an IDMap... put a name attr (required) and index by id (for uniformity)
+function fixNonIDMap(mapIn: IDMap): IDMap {
+  const mapOut = {} as IDMap;
+  for (const [name, obj] of Object.entries(mapIn)) {
+    // Dark, Steel in gen 1
+    // Can't skip, entry needed for gen filter
+    if (obj !== null) {
+      obj.name = name;
+    }
+    mapOut[toID(name)] = obj;
+  }
+  return mapOut;
+}
+
 function requirePSDex(psDataDir: string): PSDexStage1 {
   const dex = {} as PSDexStage1;
   for (const gen of GENERATIONS) {
@@ -67,7 +81,7 @@ function requirePSDex(psDataDir: string): PSDexStage1 {
       abilities: requireMap(psDataDir, gen, 'abilities'),
       items: requireMap(psDataDir, gen, 'items'),
       moves: requireMap(psDataDir, gen, 'moves'),
-      types: requireMap(psDataDir, gen, 'typechart'),
+      types: fixNonIDMap(requireMap(psDataDir, gen, 'typechart')),
     };
   }
 
@@ -561,8 +575,7 @@ function transformSpecies(dexMap: DexMap, speciesIn: IDMap): Array<Dex.Species<'
     }
 
     for (const type of specieIn.types) {
-      // No toID call here!
-      const typeId = dexMap.types.get(type);
+      const typeId = dexMap.types.get(toID(type as string));
       if (typeId !== undefined) {
         specieOut.types.push(typeId);
       }
@@ -628,7 +641,7 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
     }
     const moveOut: Dex.Move<'Plain', PSExt> = {
       name: moveIn.name,
-      type: dexMap.types.get(moveIn.type) as number,
+      type: dexMap.types.get(toID(moveIn.type) as string) as number,
       shortDesc: moveIn.shortDesc ?? moveIn.desc,
       desc: moveIn.desc ?? moveIn.shortDesc,
       basePower: moveIn.basePower,
@@ -654,10 +667,9 @@ function transformMoves(dexMap: DexMap, movesIn: IDMap): Array<Dex.Move<'Plain',
 function transformTypes(dexMap: DexMap, typesIn: IDMap): Array<Dex.Type<'Plain', PSExt>> {
   const typesOut: Array<Dex.Type<'Plain', PSExt>> = [];
 
-  // Not indexed by ID!
-  for (const [name, typeIn] of Object.entries(typesIn)) {
+  for (const [id, typeIn] of Object.entries(typesIn)) {
     const typeOut: Dex.Type<'Plain', PSExt> = {
-      name,
+      name: typeIn.name,
     };
 
     typesOut.push(typeOut);
