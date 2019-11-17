@@ -70,9 +70,13 @@ type Backref<K extends Format, Field extends string, T> = {
 // TODO: move delta here
 type Collection<K extends Format, T> = { Plain: Array<T | null>; Rich: Store<T> }[K];
 
-export interface Dex<K extends Format, Ext extends ExtSpec = {}> {
+export type Dex<K extends Format, Ext extends ExtSpec = {}> = {
   gens: Collection<K, Generation<K, Ext>>;
-}
+} & Backref<K, 'species', Store<Species<K, Ext>>> & // Cross-generational iterators
+  Backref<K, 'abilities', Store<Ability<K, Ext>>> &
+  Backref<K, 'items', Store<Item<K, Ext>>> &
+  Backref<K, 'moves', Store<Move<K, Ext>>> &
+  Backref<K, 'types', Store<Type<K, Ext>>>;
 
 export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'gens'>,

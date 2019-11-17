@@ -83,4 +83,9 @@ describe('ps-import', () => {
     const megaMetagross = gen7.species.find1(x => x.name === 'Metagross-Mega');
     expect(megaMetagross.genFamily.size).toBe(2);
   });
+
+  test('Latest generation iterators', () => {
+    // Cos it includes Berserk Gene
+    expect(Array.from(dex.items).length).toBeGreaterThan(Array.from(getGen(7).items).length);
+  });
 });

@@ -91,6 +91,37 @@ class Transformer<Src, Dest> extends StoreBase<Dest> {
   }
 }
 
+class GenfamilyStore<T> extends StoreBase<T> {
+  constructor(private dex: Dex, private k: string) {
+    super();
+  }
+
+  *[Symbol.iterator]() {
+    const transformers = [] as Array<Transformer<any, T>>;
+    for (const gen of this.dex.gens) {
+      // TODO data kind
+      transformers.push(gen[this.k] as Transformer<any, T>);
+    }
+    // Assume gens are in order of release
+    transformers.reverse();
+    let i = 0;
+    while (true) {
+      let obj: T | undefined;
+      for (const transformer of transformers) {
+        obj = transformer.get(i);
+        if (obj !== undefined) {
+          break;
+        }
+      }
+      if (obj === undefined) {
+        break;
+      }
+      yield obj;
+      i++;
+    }
+  }
+}
+
 function assignRemap(
   remap: Record<string, symbol>,
   dest: any,
@@ -115,6 +146,12 @@ function assignRemap(
 
 export default class Dex {
   gens: Transformer<any, Generation>;
+  species: GenfamilyStore<Species>;
+  abilities: GenfamilyStore<Ability>;
+  items: GenfamilyStore<Item>;
+  moves: GenfamilyStore<Move>;
+  types: GenfamilyStore<Type>;
+
   constructor(dexSrc: any[]) {
     const genSrc: any[] = [];
     this.gens = new Transformer(
@@ -124,6 +161,11 @@ export default class Dex {
     for (const dex of dexSrc) {
       genSrc.push(dex.gens);
     }
+    this.species = new GenfamilyStore(this, 'species');
+    this.abilities = new GenfamilyStore(this, 'abilities');
+    this.items = new GenfamilyStore(this, 'items');
+    this.moves = new GenfamilyStore(this, 'moves');
+    this.types = new GenfamilyStore(this, 'types');
   }
 }
 
