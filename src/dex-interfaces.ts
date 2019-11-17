@@ -76,8 +76,9 @@ export interface Dex<K extends Format, Ext extends ExtSpec = {}> {
 
 export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'gens'>,
-  'species' | 'abilities' | 'items' | 'moves' | 'types'
+  'species' | 'abilities' | 'items' | 'moves' | 'types' | 'dex'
 > &
+  Backref<K, 'dex', Dex<K, Ext>> &
   CollectionField<Ext, { species: Collection<K, Species<K, Ext>> }> &
   CollectionField<Ext, { abilities: Collection<K, Ability<K, Ext>> }> &
   CollectionField<Ext, { items: Collection<K, Item<K, Ext>> }> &

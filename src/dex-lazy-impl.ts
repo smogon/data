@@ -110,7 +110,7 @@ export default class Dex {
   gens: Transformer<any, any>;
   constructor(dexSrc: any[]) {
     const genSrc: any[] = [];
-    this.gens = new Transformer(genSrc, (id: number, gen: Source<any>) => new Generation(id, gen));
+    this.gens = new Transformer(genSrc, (id: number, gen: Source<any>) => new Generation(this, id, gen));
     for (const dex of dexSrc) {
       genSrc.push(dex.gens);
     }
@@ -127,7 +127,7 @@ class Generation {
   types: Transformer<any, any>;
   [k: string]: unknown;
 
-  constructor(id: number, genSrc: Source<any>) {
+  constructor(public dex : Dex, id: number, genSrc: Source<any>) {
     // Explicitly relying on the ability to mutate this before accessing a
     // transformer element
     const speciesSrc: any[] = [];
