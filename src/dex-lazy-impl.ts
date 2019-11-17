@@ -114,7 +114,7 @@ function assignRemap(
 ////////////////////////////////////////////////////////////////////////////////
 
 export default class Dex {
-  gens: Transformer<any, any>;
+  gens: Transformer<any, Generation>;
   constructor(dexSrc: any[]) {
     const genSrc: any[] = [];
     this.gens = new Transformer(
@@ -130,11 +130,11 @@ export default class Dex {
 ////////////////////////////////////////////////////////////////////////////////
 
 class Generation {
-  species: Transformer<any, any>;
-  abilities: Transformer<any, any>;
-  items: Transformer<any, any>;
-  moves: Transformer<any, any>;
-  types: Transformer<any, any>;
+  species: Transformer<any, Species>;
+  abilities: Transformer<any, Ability>;
+  items: Transformer<any, Item>;
+  moves: Transformer<any, Move>;
+  types: Transformer<any, Type>;
   [k: string]: unknown;
 
   constructor(public dex: Dex, id: number, genSrc: Source<any>) {
@@ -205,7 +205,8 @@ class GenerationalBase {
 function makeGenfamily(go: GenerationalBase, k: string) {
   const map = new Map();
   for (const gen of go.gen.dex.gens) {
-    const obj = gen[k].get(go.__id);
+    // TODO: datakind?
+    const obj = (gen[k] as any).get(go.__id);
     if (obj !== undefined) map.set(gen, obj);
   }
   return map;
