@@ -110,7 +110,10 @@ export default class Dex {
   gens: Transformer<any, any>;
   constructor(dexSrc: any[]) {
     const genSrc: any[] = [];
-    this.gens = new Transformer(genSrc, (id: number, gen: Source<any>) => new Generation(this, id, gen));
+    this.gens = new Transformer(
+      genSrc,
+      (id: number, gen: Source<any>) => new Generation(this, id, gen)
+    );
     for (const dex of dexSrc) {
       genSrc.push(dex.gens);
     }
@@ -127,7 +130,7 @@ class Generation {
   types: Transformer<any, any>;
   [k: string]: unknown;
 
-  constructor(public dex : Dex, id: number, genSrc: Source<any>) {
+  constructor(public dex: Dex, id: number, genSrc: Source<any>) {
     // Explicitly relying on the ability to mutate this before accessing a
     // transformer element
     const speciesSrc: any[] = [];
@@ -190,6 +193,17 @@ class GenerationalBase {
   constructor(public gen: Generation, public __id: number /* TODO: symbol? */) {}
 }
 
+// TODO is there any way we can cache this? also its just kind of ugly, and
+// maybe should exist on GenerationalBase if we add a datakind attribute
+function makeGenfamily(go: GenerationalBase, k: string) {
+  const map = new Map();
+  for (const gen of go.gen.dex.gens) {
+    const obj = gen[k].get(go.__id);
+    if (obj !== undefined) map.set(gen, obj);
+  }
+  return map;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const prevoSym = Symbol();
@@ -206,6 +220,10 @@ class SpeciesBase extends GenerationalBase {
   private [typesSym]: number[] | undefined;
   private [learnsetSym]: number[] | undefined;
   private [altBattleFormesSym]: number[] | undefined;
+
+  get genFamily() {
+    return makeGenfamily(this, 'species');
+  }
 
   get prevo() {
     const v = this[prevoSym];
@@ -271,6 +289,10 @@ class Species extends SpeciesBase {
 class Ability extends GenerationalBase {
   [k: string]: unknown;
 
+  get genFamily() {
+    return makeGenfamily(this, 'abilities');
+  }
+
   constructor(gen: Generation, id: number, ability: Source<any>) {
     super(gen, id);
     assignRemap({}, this, id, ability);
@@ -281,6 +303,10 @@ class Ability extends GenerationalBase {
 
 class Item extends GenerationalBase {
   [k: string]: unknown;
+
+  get genFamily() {
+    return makeGenfamily(this, 'items');
+  }
 
   constructor(gen: Generation, id: number, item: Source<any>) {
     super(gen, id);
@@ -294,6 +320,10 @@ const typeSym = Symbol();
 
 class MoveBase extends GenerationalBase {
   private [typeSym]: number | undefined;
+
+  get genFamily() {
+    return makeGenfamily(this, 'moves');
+  }
 
   get type() {
     const v = this[typeSym];
@@ -315,6 +345,10 @@ class Move extends MoveBase {
 
 class Type extends GenerationalBase {
   [k: string]: unknown;
+
+  get genFamily() {
+    return makeGenfamily(this, 'types');
+  }
 
   constructor(gen: Generation, id: number, type: Source<any>) {
     super(gen, id);

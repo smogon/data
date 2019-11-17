@@ -72,4 +72,15 @@ describe('ps-import', () => {
       expect(gen).toStrictEqual(JSON.parse(JSON.stringify(gen)));
     }
   });
+
+  test('Genfamilies', () => {
+    const gen7 = getGen(7);
+    const gen1 = getGen(1);
+    const alakazam7 = gen7.species.find1(x => x.name === 'Alakazam');
+    const alakazam1 = gen1.species.find1(x => x.name === 'Alakazam');
+    expect(alakazam1.genFamily.size).toBe(7);
+    expect(alakazam1.genFamily).toEqual(alakazam7.genFamily);
+    const megaMetagross = gen7.species.find1(x => x.name === 'Metagross-Mega');
+    expect(megaMetagross.genFamily.size).toBe(2);
+  });
 });

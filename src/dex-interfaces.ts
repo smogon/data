@@ -87,13 +87,18 @@ export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
 
 export type GameObject<
   K extends Format,
+  // Useless wrapper to fool TypeScript's recursion check
+  Me extends { me: unknown },
   Ext extends ExtSpec,
   Field extends string,
   Exclude extends string
-> = Backref<K, 'gen', Generation<K, Ext>> & Omit<ExtField<Ext, Field>, Exclude | 'gen'>;
+> = Omit<ExtField<Ext, Field>, Exclude | 'gen' | 'genFamily'> &
+  Backref<K, 'gen', Generation<K, Ext>> &
+  Backref<K, 'genFamily', Map<Generation<K, Ext>, Me['me']>>;
 
 export type Species<K extends Format, Ext extends ExtSpec = {}> = GameObject<
   K,
+  { me: Species<K, Ext> },
   Ext,
   'species',
   'prevo' | 'evos' | 'abilities' | 'types' | 'learnset' | 'altBattleFormes'
@@ -108,14 +113,33 @@ export type Species<K extends Format, Ext extends ExtSpec = {}> = GameObject<
 
 export type Ability<K extends Format, Ext extends ExtSpec = {}> = GameObject<
   K,
+  { me: Ability<K, Ext> },
   Ext,
   'abilities',
   never
 >;
 
-export type Item<K extends Format, Ext extends ExtSpec = {}> = GameObject<K, Ext, 'items', never>;
+export type Item<K extends Format, Ext extends ExtSpec = {}> = GameObject<
+  K,
+  { me: Item<K, Ext> },
+  Ext,
+  'items',
+  never
+>;
 
-export type Move<K extends Format, Ext extends ExtSpec = {}> = GameObject<K, Ext, 'moves', 'type'> &
+export type Move<K extends Format, Ext extends ExtSpec = {}> = GameObject<
+  K,
+  { me: Move<K, Ext> },
+  Ext,
+  'moves',
+  'type'
+> &
   RichField<Ext, 'moves', { type: Ref<K, Type<K, Ext>> }>;
 
-export type Type<K extends Format, Ext extends ExtSpec = {}> = GameObject<K, Ext, 'types', never>;
+export type Type<K extends Format, Ext extends ExtSpec = {}> = GameObject<
+  K,
+  { me: Type<K, Ext> },
+  Ext,
+  'types',
+  never
+>;
