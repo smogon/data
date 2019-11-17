@@ -7,11 +7,12 @@
 // TODO: support generational deltas, but need a mask of which objects are in
 // the generation
 type Delta<T> = Array<T | null>;
+type Source<T> = Array<Delta<T>>;
 
 class Transformer<Src, Dest> {
   constructor(
-    private source: Array<Delta<Src>>,
-    private fn: (dv: Delta<Src>) => Dest,
+    private source: Source<Src>,
+    private fn: (id: number, source: Source<Src>) => Dest,
     private cache: Dest[] = []
   ) {}
 
@@ -21,21 +22,26 @@ class Transformer<Src, Dest> {
       return v;
     }
 
-    // TODO: don't allocate here; rely on this.fn rejecting if no sources?
-    const sources = [];
-    for (const source of this.source) {
-      const dv = source[id];
-      if (dv === undefined || dv === null) {
-        continue;
+    // TODO: lift into this.fn
+    let found = false;
+    for (const src of this.source) {
+      const x = src[id];
+      if (!(x === undefined || x === null)) {
+        found = true;
+        break;
       }
-      sources.push(dv);
     }
-
-    if (sources.length === 0) {
+    if (!found) {
       return undefined;
     }
 
-    v = this.fn(sources);
+    v = this.fn(id, this.source);
+
+    // TODO: not possible atm
+    if (v === undefined) {
+      return undefined;
+    }
+
     this.cache[id] = v;
     return v;
   }
@@ -81,9 +87,12 @@ class Transformer<Src, Dest> {
 function assignRemap(
   remap: Record<string, symbol>,
   dest: any,
-  srcs: Delta<Record<string, unknown>>
+  id: number,
+  srcs: Source<Record<string, unknown>>
 ) {
-  for (const src of srcs) {
+  // TODO need a better naming scheme for sources/deltas...
+  for (const delta of srcs) {
+    const src = delta[id];
     // src can be null, reminder that for-in on null is a no-op
     for (const k in src) {
       if (k in remap) {
@@ -101,7 +110,7 @@ export default class Dex {
   gens: Transformer<any, any>;
   constructor(dexSrc: any[]) {
     const genSrc: any[] = [];
-    this.gens = new Transformer(genSrc, (gen: any[]) => new Generation(gen));
+    this.gens = new Transformer(genSrc, (id: number, gen: Source<any>) => new Generation(id, gen));
     for (const dex of dexSrc) {
       genSrc.push(dex.gens);
     }
@@ -118,7 +127,7 @@ class Generation {
   types: Transformer<any, any>;
   [k: string]: unknown;
 
-  constructor(genSrc: any[]) {
+  constructor(id: number, genSrc: Source<any>) {
     // Explicitly relying on the ability to mutate this before accessing a
     // transformer element
     const speciesSrc: any[] = [];
@@ -127,14 +136,30 @@ class Generation {
     const movesSrc: any[] = [];
     const typesSrc: any[] = [];
 
-    this.species = new Transformer(speciesSrc, (specie: any[]) => new Species(this, specie));
-    this.abilities = new Transformer(abilitiesSrc, (ability: any[]) => new Ability(this, ability));
-    this.items = new Transformer(itemsSrc, (item: any[]) => new Item(this, item));
-    this.moves = new Transformer(movesSrc, (move: any[]) => new Move(this, move));
-    this.types = new Transformer(typesSrc, (type: any[]) => new Type(this, type));
+    this.species = new Transformer(
+      speciesSrc,
+      (id: number, specie: Source<any>) => new Species(this, id, specie)
+    );
+    this.abilities = new Transformer(
+      abilitiesSrc,
+      (id: number, ability: Source<any>) => new Ability(this, id, ability)
+    );
+    this.items = new Transformer(
+      itemsSrc,
+      (id: number, item: Source<any>) => new Item(this, id, item)
+    );
+    this.moves = new Transformer(
+      movesSrc,
+      (id: number, move: Source<any>) => new Move(this, id, move)
+    );
+    this.types = new Transformer(
+      typesSrc,
+      (id: number, type: Source<any>) => new Type(this, id, type)
+    );
 
     // Can we abstract this logic into assignRemap?
-    for (const gen of genSrc) {
+    for (const delta of genSrc) {
+      const gen = delta[id];
       for (const k in gen) {
         switch (k) {
           case 'species':
@@ -223,7 +248,7 @@ class SpeciesBase extends GenerationalBase {
 class Species extends SpeciesBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, specie: any[]) {
+  constructor(gen: Generation, id: number, specie: Source<any>) {
     super(gen);
     assignRemap(
       {
@@ -235,6 +260,7 @@ class Species extends SpeciesBase {
         altBattleFormes: altBattleFormesSym,
       },
       this,
+      id,
       specie
     );
   }
@@ -245,9 +271,9 @@ class Species extends SpeciesBase {
 class Ability extends GenerationalBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, ability: any[]) {
+  constructor(gen: Generation, id: number, ability: Source<any>) {
     super(gen);
-    assignRemap({}, this, ability);
+    assignRemap({}, this, id, ability);
   }
 }
 
@@ -256,9 +282,9 @@ class Ability extends GenerationalBase {
 class Item extends GenerationalBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, item: any[]) {
+  constructor(gen: Generation, id: number, item: Source<any>) {
     super(gen);
-    assignRemap({}, this, item);
+    assignRemap({}, this, id, item);
   }
 }
 
@@ -279,9 +305,9 @@ class MoveBase extends GenerationalBase {
 class Move extends MoveBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, move: any) {
+  constructor(gen: Generation, id: number, move: Source<any>) {
     super(gen);
-    assignRemap({ type: typeSym }, this, move);
+    assignRemap({ type: typeSym }, this, id, move);
   }
 }
 
@@ -290,8 +316,8 @@ class Move extends MoveBase {
 class Type extends GenerationalBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, type: any) {
+  constructor(gen: Generation, id: number, type: Source<any>) {
     super(gen);
-    assignRemap({}, this, type);
+    assignRemap({}, this, id, type);
   }
 }
