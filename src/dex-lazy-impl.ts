@@ -9,12 +9,36 @@
 type Delta<T> = Array<T | null>;
 type Source<T> = Array<Delta<T>>;
 
-class Transformer<Src, Dest> {
+// TODO: maybe move to its own file, if we add more advanced search?
+abstract class StoreBase<T> {
+  abstract [Symbol.iterator](): Iterator<T>;
+
+  find(fn: (obj: T) => boolean) {
+    for (const obj of this) {
+      if (fn(obj)) {
+        return obj;
+      }
+    }
+    return undefined;
+  }
+
+  find1(fn: (obj: T) => boolean) {
+    const v = this.find(fn);
+    if (v === undefined) {
+      throw new Error('Nothing found');
+    }
+    return v;
+  }
+}
+
+class Transformer<Src, Dest> extends StoreBase<Dest> {
   constructor(
     private source: Source<Src>,
     private fn: (id: number, source: Source<Src>) => Dest,
     private cache: Dest[] = []
-  ) {}
+  ) {
+    super();
+  }
 
   get(id: number) {
     let v = this.cache[id];
@@ -49,23 +73,6 @@ class Transformer<Src, Dest> {
   resolve(id: number) {
     const v = this.get(id);
     if (v === undefined) throw new Error(`Cannot resolve ${id}`);
-    return v;
-  }
-
-  find(fn: (obj: Dest) => boolean) {
-    for (const obj of this) {
-      if (fn(obj)) {
-        return obj;
-      }
-    }
-    return undefined;
-  }
-
-  find1(fn: (obj: Dest) => boolean) {
-    const v = this.find(fn);
-    if (v === undefined) {
-      throw new Error('Nothing found');
-    }
     return v;
   }
 
