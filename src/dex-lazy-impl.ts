@@ -187,7 +187,7 @@ class Generation {
 }
 
 class GenerationalBase {
-  constructor(public gen: Generation) {}
+  constructor(public gen: Generation, public __id: number /* TODO: symbol? */) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +249,7 @@ class Species extends SpeciesBase {
   [k: string]: unknown;
 
   constructor(gen: Generation, id: number, specie: Source<any>) {
-    super(gen);
+    super(gen, id);
     assignRemap(
       {
         prevo: prevoSym,
@@ -272,7 +272,7 @@ class Ability extends GenerationalBase {
   [k: string]: unknown;
 
   constructor(gen: Generation, id: number, ability: Source<any>) {
-    super(gen);
+    super(gen, id);
     assignRemap({}, this, id, ability);
   }
 }
@@ -283,7 +283,7 @@ class Item extends GenerationalBase {
   [k: string]: unknown;
 
   constructor(gen: Generation, id: number, item: Source<any>) {
-    super(gen);
+    super(gen, id);
     assignRemap({}, this, id, item);
   }
 }
@@ -306,7 +306,7 @@ class Move extends MoveBase {
   [k: string]: unknown;
 
   constructor(gen: Generation, id: number, move: Source<any>) {
-    super(gen);
+    super(gen, id);
     assignRemap({ type: typeSym }, this, id, move);
   }
 }
@@ -317,7 +317,7 @@ class Type extends GenerationalBase {
   [k: string]: unknown;
 
   constructor(gen: Generation, id: number, type: Source<any>) {
-    super(gen);
+    super(gen, id);
     assignRemap({}, this, id, type);
   }
 }
