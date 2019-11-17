@@ -84,17 +84,19 @@ export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   CollectionField<Ext, { moves: Collection<K, Move<K, Ext>> }> &
   CollectionField<Ext, { types: Collection<K, Type<K, Ext>> }>;
 
-export type GameObject<K extends Format, Ext extends ExtSpec = {}> = Backref<
-  K,
-  'gen',
-  Generation<K, Ext>
->;
+export type GameObject<
+  K extends Format,
+  Ext extends ExtSpec,
+  Field extends string,
+  Exclude extends string
+> = Backref<K, 'gen', Generation<K, Ext>> & Omit<ExtField<Ext, Field>, Exclude | 'gen'>;
 
-export type Species<K extends Format, Ext extends ExtSpec = {}> = Omit<
-  ExtField<Ext, 'species'>,
+export type Species<K extends Format, Ext extends ExtSpec = {}> = GameObject<
+  K,
+  Ext,
+  'species',
   'prevo' | 'evos' | 'abilities' | 'types' | 'learnset' | 'altBattleFormes'
 > &
-  GameObject<K, Ext> &
   RichField<Ext, 'species', { prevo: Ref<K, Species<K, Ext>> | null }> &
   RichField<Ext, 'species', { evos: Array<Ref<K, Species<K, Ext>>> }> &
   RichField<Ext, 'species', { abilities: Array<Ref<K, Ability<K, Ext>>> }> &
@@ -103,18 +105,16 @@ export type Species<K extends Format, Ext extends ExtSpec = {}> = Omit<
   RichField<Ext, 'species', { learnset: Array<Ref<K, Move<K, Ext>>> }> &
   RichField<Ext, 'species', { altBattleFormes: Array<Ref<K, Species<K, Ext>>> }>;
 
-export type Ability<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'abilities'> &
-  GameObject<K, Ext>;
+export type Ability<K extends Format, Ext extends ExtSpec = {}> = GameObject<
+  K,
+  Ext,
+  'abilities',
+  never
+>;
 
-export type Item<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'items'> &
-  GameObject<K, Ext>;
+export type Item<K extends Format, Ext extends ExtSpec = {}> = GameObject<K, Ext, 'items', never>;
 
-export type Move<K extends Format, Ext extends ExtSpec = {}> = Omit<
-  ExtField<Ext, 'moves'>,
-  'type'
-> &
-  GameObject<K, Ext> &
+export type Move<K extends Format, Ext extends ExtSpec = {}> = GameObject<K, Ext, 'moves', 'type'> &
   RichField<Ext, 'moves', { type: Ref<K, Type<K, Ext>> }>;
 
-export type Type<K extends Format, Ext extends ExtSpec = {}> = ExtField<Ext, 'types'> &
-  GameObject<K, Ext>;
+export type Type<K extends Format, Ext extends ExtSpec = {}> = GameObject<K, Ext, 'types', never>;
