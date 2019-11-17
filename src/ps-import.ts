@@ -440,6 +440,9 @@ function filterPSDex(dex: PSDexStage2) {
           if (gen <= 5 && 'name' in obj) {
             obj.name = renames.get(obj.name) ?? obj.name;
           }
+          // Gen 2 items, and maybe eventually some < Gen 8 ones?
+          obj.desc = obj.desc?.replace(/^\(Gen \w\) /, '');
+          obj.shortDesc = obj.shortDesc?.replace(/^\(Gen \w\) /, '');
         }
       }
     }
