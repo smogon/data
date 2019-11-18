@@ -175,7 +175,7 @@ const PREDS = {
     if (
       s.forme !== undefined &&
       (s.forme.startsWith('Alola') || s.forme === 'Starter') &&
-      gen < 5
+      gen < 7
     ) {
       return false;
     }

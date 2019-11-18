@@ -55,6 +55,10 @@ describe('ps-import', () => {
     expect(getGen(7).species.find1(x => x.name === 'Equilibra').isNonstandard).toBe('CAP');
   });
 
+  test('alolas', () => {
+    expect(getGen(5).species.find(x => x.name.includes('Alola'))).toBeUndefined();
+  });
+
   test('items', () => {
     expect(getGen(6).items.find(x => x.name === 'Lopunnite')).toBeDefined();
   });
