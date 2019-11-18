@@ -463,6 +463,23 @@ function filterPSDex(dex: PSDexStage2) {
 
 export type MoveCategory = 'Physical' | 'Special' | 'Status';
 export type Nonstandard = 'CAP' | 'LGPE' | 'Pokestar' | null;
+export type MoveTarget =
+  // single-target
+  | 'Normal'
+  | 'Any'
+  | 'AdjacentAlly'
+  | 'AdjacentFoe'
+  | 'AdjacentAllyOrSelf'
+  // single-target, automatic
+  | 'Self'
+  | 'RandomNormal'
+  // spread
+  | 'AllAdjacent'
+  | 'AllAdjacentFoes'
+  // side and field
+  | 'AllySide'
+  | 'FoeSide'
+  | 'All';
 
 export type PSExt = {
   gens: {
@@ -502,12 +519,17 @@ export type PSExt = {
       power: number;
     } | null;
     isNonstandard: Nonstandard;
+    target: MoveTarget;
   };
   types: { name: string };
 };
 
 function isBattleOnly(specieIn: any) {
   return specieIn.battleOnly ?? isMega(specieIn);
+}
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 const TRANSFORMS = {
@@ -631,6 +653,7 @@ const TRANSFORMS = {
             }
           : null,
       isNonstandard: moveIn.isNonstandard ?? null,
+      target: capitalize(moveIn.target) as MoveTarget,
     };
   },
   types(dexIn: PSDexGen, typeIn: any): Dex.Type<'Plain', PSExt> {
