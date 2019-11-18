@@ -416,34 +416,42 @@ function filterPSDex(dex: PSDexStage2) {
 
         const supplementalGens = idGens.get(id);
 
+        let inGen;
         if (
-          // If PS has explicitly marked what gens this is in, & its not in those gens, exclude
-          (obj.gen !== undefined && gen < obj.gen) ||
-          //
-          (supplementalGens !== undefined && !supplementalGens.includes(gen)) ||
-          !PREDS[k](gen, obj)
+          obj.gen !== undefined &&
+          // Don't trust this attribute for Berserk Gene
+          !obj.isNonstandard
         ) {
-          delete map[id];
+          inGen = gen >= obj.gen;
+        } else if (supplementalGens !== undefined) {
+          inGen = supplementalGens.includes(gen);
         } else {
-          // Genfamily id
-          let __id = idMap[k].get(id);
-          if (__id === undefined) {
-            __id = idMap[k].size;
-            idMap[k].set(id, __id);
-          }
-          obj.__id = __id;
-
-          if (gen !== 7) {
-            // TODO cleaner way of doing this, just need the test to pass b4 commit
-            delete obj.zMovePower;
-          }
-          if (gen <= 5 && 'name' in obj) {
-            obj.name = renames.get(obj.name) ?? obj.name;
-          }
-          // Gen 2 items, and maybe eventually some < Gen 8 ones?
-          obj.desc = obj.desc?.replace(/^\(Gen \w\) /, '');
-          obj.shortDesc = obj.shortDesc?.replace(/^\(Gen \w\) /, '');
+          inGen = PREDS[k](gen, obj);
         }
+
+        if (!inGen) {
+          delete map[id];
+          continue;
+        }
+
+        // Genfamily id
+        let __id = idMap[k].get(id);
+        if (__id === undefined) {
+          __id = idMap[k].size;
+          idMap[k].set(id, __id);
+        }
+        obj.__id = __id;
+
+        if (gen !== 7) {
+          // TODO cleaner way of doing this, just need the test to pass b4 commit
+          delete obj.zMovePower;
+        }
+        if (gen <= 5 && 'name' in obj) {
+          obj.name = renames.get(obj.name) ?? obj.name;
+        }
+        // Gen 2 items, and maybe eventually some < Gen 8 ones?
+        obj.desc = obj.desc?.replace(/^\(Gen \w\) /, '');
+        obj.shortDesc = obj.shortDesc?.replace(/^\(Gen \w\) /, '');
       }
     }
   }

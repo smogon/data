@@ -55,6 +55,10 @@ describe('ps-import', () => {
     expect(getGen(7).species.find1(x => x.name === 'Equilibra').isNonstandard).toBe('CAP');
   });
 
+  test('items', () => {
+    expect(getGen(6).items.find(x => x.name === 'Lopunnite')).toBeDefined();
+  });
+
   test('altBattleFormes', () => {
     const venusaur = getGen(7).species.find1(x => x.name === 'Venusaur');
     const venusaurMega = getGen(7).species.find1(x => x.name === 'Venusaur-Mega');
