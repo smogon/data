@@ -78,14 +78,20 @@ describe('ps-import', () => {
     const gen1 = getGen(1);
     const alakazam7 = gen7.species.find1(x => x.name === 'Alakazam');
     const alakazam1 = gen1.species.find1(x => x.name === 'Alakazam');
-    expect(alakazam1.genFamily.size).toBe(7);
-    expect(alakazam1.genFamily).toEqual(alakazam7.genFamily);
+    expect(alakazam1.genFamily.earliest).toBe(alakazam1);
+    expect(alakazam1.genFamily.latest).toBe(alakazam7);
+    const gf1arr = Array.from(alakazam1.genFamily);
+    const gf7arr = Array.from(alakazam7.genFamily);
+    expect(gf1arr.length).toBe(7);
+    expect(gf1arr).toEqual(gf7arr);
     const megaMetagross = gen7.species.find1(x => x.name === 'Metagross-Mega');
-    expect(megaMetagross.genFamily.size).toBe(2);
+    expect(Array.from(megaMetagross.genFamily).length).toBe(2);
   });
 
   test('Latest generation iterators', () => {
     // Cos it includes Berserk Gene
     expect(Array.from(dex.items).length).toBeGreaterThan(Array.from(getGen(7).items).length);
+    // We can find an item with the same earliest/latest, right? (Also Berserk Gene)
+    expect(dex.items.find(x => Object.is(x.earliest, x.latest))).toBeDefined();
   });
 });

@@ -91,7 +91,7 @@ class Transformer<Src, Dest> extends StoreBase<Dest> {
   }
 }
 
-class GenfamilyStore<T> extends StoreBase<T> {
+class GenFamilyStore<T> extends StoreBase<GenFamily<T>> {
   constructor(private dex: Dex, private k: string) {
     super();
   }
@@ -102,21 +102,21 @@ class GenfamilyStore<T> extends StoreBase<T> {
       // TODO data kind
       transformers.push(gen[this.k] as Transformer<any, T>);
     }
-    // Assume gens are in order of release
-    transformers.reverse();
     let i = 0;
     while (true) {
-      let obj: T | undefined;
+      const objs = [];
       for (const transformer of transformers) {
-        obj = transformer.get(i);
+        // TODO: make genfamily lazy, so we don't construct the object of every
+        // gen as we iterate (for example, if we only needed the latest)?
+        const obj = transformer.get(i);
         if (obj !== undefined) {
-          break;
+          objs.push(obj);
         }
       }
-      if (obj === undefined) {
+      if (objs.length === 0) {
         break;
       }
-      yield obj;
+      yield new GenFamily(objs);
       i++;
     }
   }
@@ -146,11 +146,11 @@ function assignRemap(
 
 export default class Dex {
   gens: Transformer<any, Generation>;
-  species: GenfamilyStore<Species>;
-  abilities: GenfamilyStore<Ability>;
-  items: GenfamilyStore<Item>;
-  moves: GenfamilyStore<Move>;
-  types: GenfamilyStore<Type>;
+  species: GenFamilyStore<Species>;
+  abilities: GenFamilyStore<Ability>;
+  items: GenFamilyStore<Item>;
+  moves: GenFamilyStore<Move>;
+  types: GenFamilyStore<Type>;
 
   constructor(dexSrc: any[]) {
     const genSrc: any[] = [];
@@ -161,11 +161,11 @@ export default class Dex {
     for (const dex of dexSrc) {
       genSrc.push(dex.gens);
     }
-    this.species = new GenfamilyStore(this, 'species');
-    this.abilities = new GenfamilyStore(this, 'abilities');
-    this.items = new GenfamilyStore(this, 'items');
-    this.moves = new GenfamilyStore(this, 'moves');
-    this.types = new GenfamilyStore(this, 'types');
+    this.species = new GenFamilyStore(this, 'species');
+    this.abilities = new GenFamilyStore(this, 'abilities');
+    this.items = new GenFamilyStore(this, 'items');
+    this.moves = new GenFamilyStore(this, 'moves');
+    this.types = new GenFamilyStore(this, 'types');
   }
 }
 
@@ -242,16 +242,34 @@ class GenerationalBase {
   constructor(public gen: Generation, public __id: number /* TODO: symbol? */) {}
 }
 
+class GenFamily<T> extends StoreBase<T> {
+  constructor(private arr: T[]) {
+    super();
+  }
+
+  [Symbol.iterator]() {
+    return this.arr[Symbol.iterator]();
+  }
+
+  get earliest() {
+    return this.arr[0];
+  }
+
+  get latest() {
+    return this.arr[this.arr.length - 1];
+  }
+}
+
 // TODO is there any way we can cache this? also its just kind of ugly, and
 // maybe should exist on GenerationalBase if we add a datakind attribute
-function makeGenfamily(go: GenerationalBase, k: string) {
-  const map = new Map();
+function makeGenFamily(go: GenerationalBase, k: string) {
+  const arr = [];
   for (const gen of go.gen.dex.gens) {
     // TODO: datakind?
     const obj = (gen[k] as any).get(go.__id);
-    if (obj !== undefined) map.set(gen, obj);
+    if (obj !== undefined) arr.push(obj);
   }
-  return map;
+  return new GenFamily(arr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,7 +290,7 @@ class SpeciesBase extends GenerationalBase {
   private [altBattleFormesSym]: number[] | undefined;
 
   get genFamily() {
-    return makeGenfamily(this, 'species');
+    return makeGenFamily(this, 'species');
   }
 
   get prevo() {
@@ -340,7 +358,7 @@ class Ability extends GenerationalBase {
   [k: string]: unknown;
 
   get genFamily() {
-    return makeGenfamily(this, 'abilities');
+    return makeGenFamily(this, 'abilities');
   }
 
   constructor(gen: Generation, id: number, ability: Source<any>) {
@@ -355,7 +373,7 @@ class Item extends GenerationalBase {
   [k: string]: unknown;
 
   get genFamily() {
-    return makeGenfamily(this, 'items');
+    return makeGenFamily(this, 'items');
   }
 
   constructor(gen: Generation, id: number, item: Source<any>) {
@@ -372,7 +390,7 @@ class MoveBase extends GenerationalBase {
   private [typeSym]: number | undefined;
 
   get genFamily() {
-    return makeGenfamily(this, 'moves');
+    return makeGenFamily(this, 'moves');
   }
 
   get type() {
@@ -397,7 +415,7 @@ class Type extends GenerationalBase {
   [k: string]: unknown;
 
   get genFamily() {
-    return makeGenfamily(this, 'types');
+    return makeGenFamily(this, 'types');
   }
 
   constructor(gen: Generation, id: number, type: Source<any>) {

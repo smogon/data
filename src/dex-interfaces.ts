@@ -70,13 +70,18 @@ type Backref<K extends Format, Field extends string, T> = {
 // TODO: move delta here
 type Collection<K extends Format, T> = { Plain: Array<T | null>; Rich: Store<T> }[K];
 
+export interface GenFamily<T> extends Store<T> {
+  earliest: T;
+  latest: T;
+}
+
 export type Dex<K extends Format, Ext extends ExtSpec = {}> = {
   gens: Collection<K, Generation<K, Ext>>;
-} & Backref<K, 'species', Store<Species<K, Ext>>> & // Cross-generational iterators
-  Backref<K, 'abilities', Store<Ability<K, Ext>>> &
-  Backref<K, 'items', Store<Item<K, Ext>>> &
-  Backref<K, 'moves', Store<Move<K, Ext>>> &
-  Backref<K, 'types', Store<Type<K, Ext>>>;
+} & Backref<K, 'species', Store<GenFamily<Species<K, Ext>>>> & // Cross-generational iterators
+  Backref<K, 'abilities', Store<GenFamily<Ability<K, Ext>>>> &
+  Backref<K, 'items', Store<GenFamily<Item<K, Ext>>>> &
+  Backref<K, 'moves', Store<GenFamily<Move<K, Ext>>>> &
+  Backref<K, 'types', Store<GenFamily<Type<K, Ext>>>>;
 
 export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'gens'>,
@@ -98,7 +103,7 @@ export type GameObject<
   Exclude extends string
 > = Omit<ExtField<Ext, Field>, Exclude | 'gen' | 'genFamily'> &
   Backref<K, 'gen', Generation<K, Ext>> &
-  Backref<K, 'genFamily', Map<Generation<K, Ext>, Me['me']>>;
+  Backref<K, 'genFamily', GenFamily<Me['me']>>;
 
 export type Species<K extends Format, Ext extends ExtSpec = {}> = GameObject<
   K,
