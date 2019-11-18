@@ -482,6 +482,8 @@ export type PSExt = {
     altBattleFormes: 'present';
     // TODO: what to do with ()
     tier: string;
+    heightm: number;
+    weightkg: number;
     // doublesTier: string
   };
   abilities: { name: string; shortDesc: string; desc: string; isNonstandard: Nonstandard };
@@ -534,6 +536,8 @@ const TRANSFORMS = {
       isBattleOnly: isBattleOnly(specieIn),
       altBattleFormes: [],
       tier: specieIn.tier,
+      heightm: specieIn.heightm,
+      weightkg: specieIn.weightkg,
       // Can be undefined
       // doublesTier: specieIn.doublesTier
     };
