@@ -27,7 +27,7 @@ type PSDexStage2 = Record<GenerationNumber, PSDexGen>;
 
 function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?: string): IDMap {
   const dirComponents = [process.cwd(), psDataDir];
-  if (gen !== 7) {
+  if (gen !== 8) {
     dirComponents.push('mods', `gen${gen}`);
   }
 
@@ -188,9 +188,23 @@ const PREDS = {
       return false;
     }
 
+    if ((s.forme === 'Galar' || s.forme === 'Gmax') && gen < 8) {
+      return false;
+    }
+
+    // NatDex
+    if (s.isNonstandard === 'Past') {
+      if (gen !== 8) {
+        console.log(s.species);
+      }
+      return false;
+    }
+
     switch (gen) {
-      case 7:
+      case 8:
         return true;
+      case 7:
+        return s.num <= 809;
       case 6:
         return s.num <= 721;
       case 5:
@@ -212,8 +226,10 @@ const PREDS = {
     }
 
     switch (gen) {
-      case 7:
+      case 8:
         return true;
+      case 7:
+        return a.num <= 233;
       case 6:
         return a.num <= 191;
       case 5:
@@ -234,8 +250,10 @@ const PREDS = {
     }
 
     switch (gen) {
-      case 7:
+      case 8:
         return true;
+      case 7:
+        return i.num <= 689;
       case 6:
         return i.num <= 688;
       case 5:
@@ -263,8 +281,10 @@ const PREDS = {
     }
 
     switch (gen) {
-      case 7:
+      case 8:
         return true;
+      case 7:
+        return m.num <= 742;
       case 6:
         return m.num <= 621;
       case 5:
@@ -281,7 +301,7 @@ const PREDS = {
   },
 
   types(gen: GenerationNumber, t: any) {
-    if (gen < 7) {
+    if (gen < 8) {
       return t !== null;
     } else {
       return true;

@@ -43,7 +43,12 @@ describe('ps-import', () => {
     expect(getGen(5).moves.find(x => x.name === 'Hi Jump Kick')).toBeDefined();
   });
 
+  test('moves', () => {
+    expect(getGen(8).moves.find(x => x.name === 'Karate Chop')).toBeUndefined();
+  });
+
   test('z-moves', () => {
+    expect(getGen(8).moves.find1(x => x.name === 'Absorb').zMove).toBeNull();
     expect(getGen(7).moves.find1(x => x.name === 'Absorb').zMove).not.toBeNull();
     expect(getGen(6).moves.find1(x => x.name === 'Absorb').zMove).toBeNull();
   });
@@ -61,6 +66,10 @@ describe('ps-import', () => {
 
   test('items', () => {
     expect(getGen(6).items.find(x => x.name === 'Lopunnite')).toBeDefined();
+    expect(getGen(8).items.find(x => x.name === 'Lopunnite')).toBeUndefined();
+    // We let Berserk Gene through even tho isNonstandard: Past, ensure we
+    // didn't let this slip through as well
+    expect(getGen(2).items.find(x => x.name === 'Lopunnite')).toBeUndefined();
   });
 
   test('altBattleFormes', () => {
@@ -122,4 +131,6 @@ describe('ps-import', () => {
       }
     }
   });
+
+  test('gen 8', () => {});
 });
