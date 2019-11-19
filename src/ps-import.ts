@@ -138,6 +138,14 @@ function inheritPSDex(dex: PSDexStage1): PSDexStage2 {
 
     mergeMap(dex[gen].species, dex[gen].learnsets);
     delete dex[gen].learnsets;
+
+    // Inherit data from base formes
+    for (const specie of Object.values(dex[gen].species)) {
+      if (specie.baseSpecies !== undefined) {
+        const baseSpecie = dex[gen].species[toID(specie.baseSpecies)];
+        Object.assign(specie, { ...baseSpecie, ...specie });
+      }
+    }
   }
 
   return dex;
@@ -535,15 +543,6 @@ function capitalize(s: string) {
 const TRANSFORMS = {
   species(dexIn: PSDexGen, specieIn: any): Dex.Species<'Plain', PSExt> {
     const id = toID(specieIn.species);
-
-    // Sometimes other formes don't have tiers. Find its parent forme
-    if (specieIn.tier === undefined) {
-      for (const specieIn2 of Object.values(dexIn.species)) {
-        if (specieIn2.otherFormes?.includes(id)) {
-          specieIn.tier = specieIn2.tier;
-        }
-      }
-    }
 
     const specieOut: Dex.Species<'Plain', PSExt> = {
       num: specieIn.num,
