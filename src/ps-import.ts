@@ -98,12 +98,12 @@ function inheritMap(mapFrom: IDMap, mapTo: IDMap) {
     const objFrom = mapFrom[id];
     let objTo = mapTo[id];
     if (!objTo) {
-      objTo = mapTo[id] = {};
+      objTo = mapTo[id] = { inherit: true };
     }
     if (objTo.inherit) {
       delete objTo.inherit;
+      Object.assign(objTo, { ...objFrom, ...objTo });
     }
-    Object.assign(objTo, { ...objFrom, ...objTo });
   }
 }
 
