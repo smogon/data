@@ -29,6 +29,14 @@ abstract class StoreBase<T> {
     }
     return v;
   }
+
+  *findAll(fn: (obj: T) => boolean) {
+    for (const obj of this) {
+      if (fn(obj)) {
+        yield obj;
+      }
+    }
+  }
 }
 
 class Transformer<Src, Dest> extends StoreBase<Dest> {
@@ -144,6 +152,12 @@ function assignRemap(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type BackrefContainer = {
+  [k: string]: {
+    [l: string]: [string, string, string?];
+  };
+};
+
 export default class Dex {
   gens: Transformer<any, Generation>;
   species: GenFamilyStore<Species>;
@@ -151,6 +165,8 @@ export default class Dex {
   items: GenFamilyStore<Item>;
   moves: GenFamilyStore<Move>;
   types: GenFamilyStore<Type>;
+
+  private backrefs: BackrefContainer = {};
 
   constructor(dexSrc: any[]) {
     const genSrc: any[] = [];
@@ -166,6 +182,21 @@ export default class Dex {
     this.items = new GenFamilyStore(this, 'items');
     this.moves = new GenFamilyStore(this, 'moves');
     this.types = new GenFamilyStore(this, 'types');
+  }
+
+  constructBackref(
+    [firstOuter, firstInner, firstKey]: [string, string, string?],
+    [secondOuter, secondInner, secondKey = firstKey] = [firstInner, firstOuter]
+  ): Dex {
+    if (!(firstOuter in this.backrefs)) this.backrefs[firstOuter] = {};
+    this.backrefs[firstOuter][firstInner] = [secondOuter, secondInner, secondKey];
+    if (!(secondOuter in this.backrefs)) this.backrefs[secondOuter] = {};
+    this.backrefs[secondOuter][secondInner] = [firstOuter, firstInner, firstKey];
+    return this;
+  }
+
+  getBackref(outer: string, inner: string): [string, string, string?] | undefined {
+    return this.backrefs[outer]?.[inner];
   }
 }
 
@@ -239,7 +270,117 @@ class Generation {
 }
 
 class GenerationalBase {
+  [k: string]: unknown;
+
   constructor(public gen: Generation, public __id: number /* TODO: symbol? */) {}
+
+  protected *resolveBackref<T extends GenerationalBase>(
+    outer: string,
+    inner: string,
+    key?: string
+  ): Generator<T, void> | undefined {
+    const backref = this.gen.dex.getBackref(outer, inner);
+    if (backref === undefined) return undefined;
+    const [backrefOuter, backrefInner, backrefKey] = backref;
+
+    const type = this.gen[backrefOuter];
+    if (!(type instanceof Transformer)) {
+      throw new Error(
+        `backref ${outer}.${inner} -> ${backrefOuter}.${backrefInner} does not result in a Transformer`
+      );
+    }
+
+    const getKeyedObject = (obj: Record<string, any>) =>
+      backrefKey === undefined ? obj : obj[backrefKey];
+    const result = (type as Transformer<any, T>).findAll(obj => {
+      const o = obj[backrefInner] as any;
+      if (o === undefined) {
+        throw new Error(
+          `required key not found for backref ${outer}.${inner} -> ${backrefOuter}.${backrefInner}`
+        );
+      }
+
+      if (Array.isArray(o)) {
+        return o.some(v => (typeof v === 'number' ? v : getKeyedObject(v).__id) === this.__id);
+      }
+
+      return (typeof o === 'number' ? o : getKeyedObject(o).__id) === this.__id;
+    });
+
+    for (const obj of result) {
+      if (key === undefined) {
+        yield obj;
+        continue;
+      }
+
+      const newObj = Object.assign({}, obj) as any;
+      newObj[key] = obj;
+      yield newObj;
+    }
+  }
+
+  protected resolveToSymbolOrBackref<T, B extends true = true>(
+    sym: symbol,
+    refType: string,
+    isArray: B,
+    key?: string,
+    backrefOuter?: string,
+    backrefInner?: string
+  ): T[];
+  protected resolveToSymbolOrBackref<T extends GenerationalBase, B extends false = false>(
+    sym: symbol,
+    refType: string,
+    isArray: B,
+    key?: string,
+    backrefOuter?: string,
+    backrefInner?: string
+  ): T | undefined;
+  protected resolveToSymbolOrBackref<T extends GenerationalBase>(
+    sym: symbol,
+    refType: string,
+    isArray = true,
+    key?: string,
+    backrefOuter?: string,
+    backrefInner?: string
+  ): T | T[] | undefined {
+    // TODO: cache backref results and large objects
+
+    // We have to use `this as any` everywhere because TypeScript doesn't like
+    // using symbols as indexes.
+
+    const v = (this as any)[sym];
+
+    if (v === undefined) {
+      if (backrefOuter !== undefined && backrefInner !== undefined) {
+        const backref = this.resolveBackref<T>(backrefOuter, backrefInner, key);
+        if (backref !== undefined) {
+          if (isArray) return Array.from(backref);
+          return backref.next().value as T | undefined;
+        }
+      }
+
+      throw new Error(`${refType} not loaded yet`);
+    }
+
+    const getKeyedValue = (obj: Record<string, any>) => (key === undefined ? obj : obj[key]);
+    const getKeyedObject = (obj: Record<string, any>) => {
+      const newObj = Object.assign({}, obj) as any;
+      newObj[key!] = (this.gen[refType] as Transformer<any, T>).resolve(getKeyedValue(obj));
+      return newObj;
+    };
+
+    if (isArray && Array.isArray(v)) {
+      return v.map(id => {
+        if (key === undefined) return (this.gen[refType] as Transformer<any, T>).resolve(id);
+        return getKeyedObject(id);
+      });
+    } else if (!isArray) {
+      if (key === undefined) return (this.gen[refType] as Transformer<any, T>).resolve(v);
+      return getKeyedObject(v);
+    }
+
+    return v;
+  }
 
   toString() {
     if (Object.getOwnPropertyDescriptor(this, 'name') !== undefined) {
@@ -329,20 +470,26 @@ class SpeciesBase extends GenerationalBase {
   }
 
   get types() {
-    const v = this[typesSym];
-    if (v === undefined) throw new Error('types not loaded yet');
-    const typeArray = new SlashArray();
-    for (const id of v) {
-      typeArray.push(this.gen.types.resolve(id));
-    }
-    return typeArray;
+    const v = this.resolveToSymbolOrBackref<Type>(
+      typesSym,
+      'types',
+      true,
+      undefined,
+      'species',
+      'types'
+    );
+    return SlashArray.from(v);
   }
 
   get learnset() {
-    const v = this[learnsetSym];
-    if (v === undefined) throw new Error('learnset not loaded yet');
-    // TODO: cache this? make it a Transformer? this is a big attribute
-    return v.map(({ what: id, how }) => ({ what: this.gen.moves.resolve(id), how }));
+    return this.resolveToSymbolOrBackref<{ what: Move; how: unknown }>(
+      learnsetSym,
+      'moves',
+      true,
+      'what',
+      'species',
+      'learnset'
+    );
   }
 
   get altBattleFormes() {
@@ -406,18 +553,29 @@ class Item extends GenerationalBase {
 ////////////////////////////////////////////////////////////////////////////////
 
 const typeSym = Symbol();
+const speciesSym = Symbol();
 
 class MoveBase extends GenerationalBase {
   private [typeSym]: number | undefined;
+  private [speciesSym]: number[] | undefined;
 
   get genFamily() {
     return makeGenFamily(this, 'moves');
   }
 
   get type() {
-    const v = this[typeSym];
-    if (v === undefined) throw new Error('type not loaded yet');
-    return this.gen.types.resolve(v);
+    return this.resolveToSymbolOrBackref<Type>(typeSym, 'types', false, undefined, 'moves', 'type');
+  }
+
+  get species() {
+    return this.resolveToSymbolOrBackref<Species>(
+      speciesSym,
+      'species',
+      true,
+      'what',
+      'moves',
+      'species'
+    );
   }
 }
 
@@ -432,11 +590,30 @@ class Move extends MoveBase {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const movesSym = Symbol();
+
 class Type extends GenerationalBase {
+  [speciesSym]: number[] | undefined;
+  [movesSym]: number[] | undefined;
   [k: string]: unknown;
 
   get genFamily() {
     return makeGenFamily(this, 'types');
+  }
+
+  get species() {
+    return this.resolveToSymbolOrBackref(
+      speciesSym,
+      'species',
+      true,
+      undefined,
+      'types',
+      'species'
+    );
+  }
+
+  get moves() {
+    return this.resolveToSymbolOrBackref(movesSym, 'moves', true, undefined, 'types', 'moves');
   }
 
   constructor(gen: Generation, id: number, type: Source<any>) {

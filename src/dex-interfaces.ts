@@ -32,10 +32,11 @@ export type ExtSpec = {
   };
 };
 
+type MaybeField<T, Field extends string> = T extends Record<Field, unknown> ? T[Field] : {};
+type TypeOrElse<T, ElseT> = T extends never ? ElseT : T extends Record<string, never> ? ElseT : T;
+
 // Array may be empty if no fields.
-type ExtField<Ext extends ExtSpec, Field extends string> = Ext extends Record<Field, unknown>
-  ? Ext[Field]
-  : {};
+type ExtField<Ext extends ExtSpec, Field extends string> = MaybeField<Ext, Field>;
 
 type RichField<
   Ext extends ExtSpec,
@@ -82,7 +83,45 @@ export type Learnset<T> = Array<{ what: T; how: MoveSource[] }>;
 
 export type Dex<K extends Format, Ext extends ExtSpec = {}> = {
   gens: Collection<K, Generation<K, Ext>>;
-} & Backref<K, 'species', Store<GenFamily<Species<K, Ext>>>> & // Cross-generational iterators
+} & Backref<
+  K,
+  'constructBackref',
+  <
+    FirstOuter extends string,
+    FirstInner extends string,
+    SecondOuter extends string = FirstInner,
+    SecondInner extends string = FirstOuter
+  >(
+    first: [FirstOuter, FirstInner, string?],
+    second?: [SecondOuter, SecondInner, string?]
+  ) => Dex<
+    'Rich',
+    Ext &
+      {
+        [o in FirstOuter]: {
+          [i in FirstInner]: TypeOrElse<
+            TypeOrElse<
+              MaybeField<MaybeField<Ext, FirstOuter>, FirstInner>,
+              MaybeField<MaybeField<Ext, SecondOuter>, SecondInner>
+            >,
+            never
+          >;
+        };
+      } &
+      {
+        [i in SecondOuter]: {
+          [o in SecondInner]: TypeOrElse<
+            TypeOrElse<
+              MaybeField<MaybeField<Ext, SecondOuter>, SecondInner>,
+              MaybeField<MaybeField<Ext, FirstOuter>, FirstInner>
+            >,
+            never
+          >;
+        };
+      }
+  >
+> &
+  Backref<K, 'species', Store<GenFamily<Species<K, Ext>>>> & // Cross-generational iterators
   Backref<K, 'abilities', Store<GenFamily<Ability<K, Ext>>>> &
   Backref<K, 'items', Store<GenFamily<Item<K, Ext>>>> &
   Backref<K, 'moves', Store<GenFamily<Move<K, Ext>>>> &
@@ -146,14 +185,17 @@ export type Move<K extends Format, Ext extends ExtSpec = {}> = GameObject<
   { me: Move<K, Ext> },
   Ext,
   'moves',
-  'type'
+  'type' | 'species'
 > &
-  RichField<Ext, 'moves', { type: Ref<K, Type<K, Ext>> }>;
+  RichField<Ext, 'moves', { type: Ref<K, Type<K, Ext>> }> &
+  RichField<Ext, 'moves', { species: Learnset<Ref<K, Species<K, Ext>>> }>;
 
 export type Type<K extends Format, Ext extends ExtSpec = {}> = GameObject<
   K,
   { me: Type<K, Ext> },
   Ext,
   'types',
-  never
->;
+  'species' | 'moves'
+> &
+  RichField<Ext, 'types', { species: Array<Ref<K, Species<K, Ext>>> }> &
+  RichField<Ext, 'types', { moves: Array<Ref<K, Move<K, Ext>>> }>;
