@@ -301,7 +301,8 @@ class SpeciesBase extends GenerationalBase {
   private [evosSym]: number[] | undefined;
   private [abilitiesSym]: number[] | undefined;
   private [typesSym]: number[] | undefined;
-  private [learnsetSym]: number[] | undefined;
+  // TODO: thread MoveSource here to this `unknown`
+  private [learnsetSym]: Array<{ what: number; how: unknown }> | undefined;
   private [altBattleFormesSym]: number[] | undefined;
 
   get genFamily() {
@@ -340,7 +341,8 @@ class SpeciesBase extends GenerationalBase {
   get learnset() {
     const v = this[learnsetSym];
     if (v === undefined) throw new Error('learnset not loaded yet');
-    return v.map(id => this.gen.moves.resolve(id));
+    // TODO: cache this? make it a Transformer? this is a big attribute
+    return v.map(({ what: id, how }) => ({ what: this.gen.moves.resolve(id), how }));
   }
 
   get altBattleFormes() {

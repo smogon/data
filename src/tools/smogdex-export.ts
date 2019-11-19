@@ -24,7 +24,7 @@ function getIntroduction(genFamily: GenFamily<{ gen: { num: number } }>) {
 }
 
 // Need to use latest names, not gen-accurate names
-function getName(obj: any) {
+function getName(obj: { genFamily: { latest: { name: string } } }) {
   let name = obj.genFamily.latest.name;
   if (name === 'Necrozma-Dawn-Wings') {
     name = 'Necrozma-Dawn Wings';
@@ -155,7 +155,7 @@ function exportLearnsets(gen: Generation<'Rich', PSExt>) {
   for (const specie of gen.species) {
     if (specie.isBattleOnly) continue;
     learnsets[getName(specie)] = {
-      moves: specie.learnset.map(getName).filter(x => x !== 'Hidden Power'),
+      moves: specie.learnset.map(({ what }) => getName(what)).filter(x => x !== 'Hidden Power'),
     };
   }
 

@@ -609,10 +609,11 @@ const TRANSFORMS = {
       }
     }
 
-    for (const moveId in specieIn.learnset) {
+    // Pokestars have a missing learnset
+    for (const [moveId, how] of Object.entries(specieIn.learnset ?? [])) {
       const move = dexIn.moves[moveId];
       if (move !== undefined) {
-        specieOut.learnset.push(move.__id);
+        specieOut.learnset.push({ what: move.__id, how: how as Dex.MoveSource[] });
       }
     }
 

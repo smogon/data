@@ -75,6 +75,11 @@ export interface GenFamily<T> extends Store<T> {
   latest: T;
 }
 
+// TODO: parse PS MoveSources into a legit datatype; see sim/global-types.ts for documentation
+export type MoveSource = string;
+
+export type Learnset<T> = Array<{ what: T; how: MoveSource[] }>;
+
 export type Dex<K extends Format, Ext extends ExtSpec = {}> = {
   gens: Collection<K, Generation<K, Ext>>;
 } & Backref<K, 'species', Store<GenFamily<Species<K, Ext>>>> & // Cross-generational iterators
@@ -117,7 +122,7 @@ export type Species<K extends Format, Ext extends ExtSpec = {}> = GameObject<
   RichField<Ext, 'species', { abilities: Array<Ref<K, Ability<K, Ext>>> }> &
   RichField<Ext, 'species', { types: Array<Ref<K, Type<K, Ext>>> }> &
   // TODO: Learnset interface
-  RichField<Ext, 'species', { learnset: Array<Ref<K, Move<K, Ext>>> }> &
+  RichField<Ext, 'species', { learnset: Learnset<Ref<K, Move<K, Ext>>> }> &
   RichField<Ext, 'species', { altBattleFormes: Array<Ref<K, Species<K, Ext>>> }>;
 
 export type Ability<K extends Format, Ext extends ExtSpec = {}> = GameObject<
