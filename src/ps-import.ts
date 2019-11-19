@@ -457,6 +457,12 @@ function filterPSDex(dex: PSDexStage2) {
         if (gen <= 5 && 'name' in obj) {
           obj.name = renames.get(obj.name) ?? obj.name;
         }
+
+        // Not relevant after we sort things into the correct generation.
+        if (obj.isNonstandard === 'Past') {
+          delete obj.isNonstandard;
+        }
+
         // Gen 2 items, and maybe eventually some < Gen 8 ones?
         obj.desc = obj.desc?.replace(/^\(Gen \w\) /, '');
         obj.shortDesc = obj.shortDesc?.replace(/^\(Gen \w\) /, '');

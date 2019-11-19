@@ -110,4 +110,16 @@ describe('ps-import', () => {
     // We can find an item with the same earliest/latest, right? (Also Berserk Gene)
     expect(dex.items.find(x => Object.is(x.earliest, x.latest))).toBeDefined();
   });
+
+  // TODO remove when we have TS interfaces validation of data
+  test('no nonstandard past', () => {
+    for (const gen of dex.gens) {
+      // TODO: datakind?
+      for (const k of ['species', 'abilities', 'items', 'moves', 'types', 'moves'] as const) {
+        for (const go of gen[k]) {
+          expect((go as any).isNonstandard).not.toBe('Past');
+        }
+      }
+    }
+  });
 });
