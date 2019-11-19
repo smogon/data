@@ -192,14 +192,6 @@ const PREDS = {
       return false;
     }
 
-    // NatDex
-    if (s.isNonstandard === 'Past') {
-      if (gen !== 8) {
-        console.log(s.species);
-      }
-      return false;
-    }
-
     switch (gen) {
       case 8:
         return true;
@@ -221,10 +213,6 @@ const PREDS = {
   },
 
   abilities(gen: GenerationNumber, a: any) {
-    if (a.name === 'No Ability') {
-      return false;
-    }
-
     switch (gen) {
       case 8:
         return true;
@@ -245,10 +233,6 @@ const PREDS = {
   },
 
   items(gen: GenerationNumber, i: any) {
-    if (i.isNonstandard === 'Past' && gen !== 2) {
-      return false;
-    }
-
     switch (gen) {
       case 8:
         return true;
@@ -445,11 +429,9 @@ function filterPSDex(dex: PSDexStage2) {
         const supplementalGens = idGens.get(id);
 
         let inGen;
-        if (
-          obj.gen !== undefined &&
-          // Don't trust this attribute for Berserk Gene
-          !obj.isNonstandard
-        ) {
+        if (obj.isNonstandard === 'Past') {
+          inGen = false;
+        } else if (obj.gen !== undefined) {
           inGen = gen >= obj.gen;
         } else if (supplementalGens !== undefined) {
           inGen = supplementalGens.includes(gen);
@@ -476,11 +458,6 @@ function filterPSDex(dex: PSDexStage2) {
         }
         if (gen <= 5 && 'name' in obj) {
           obj.name = renames.get(obj.name) ?? obj.name;
-        }
-
-        // Not relevant after we sort things into the correct generation.
-        if (obj.isNonstandard === 'Past') {
-          delete obj.isNonstandard;
         }
 
         // Gen 2 items, and maybe eventually some < Gen 8 ones?
