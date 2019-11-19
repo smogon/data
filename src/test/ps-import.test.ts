@@ -139,4 +139,18 @@ describe('ps-import', () => {
   });
 
   test('gen 8', () => {});
+
+  // TODO: move to a diff file?
+  test('nice display', () => {
+    expect(
+      getGen(1)
+        .species.find1(s => s.name === 'Slowbro')
+        .toString()
+    ).toBe('Slowbro');
+    expect(
+      getGen(1)
+        .species.find1(s => s.name === 'Slowbro')
+        .types.toString()
+    ).toBe('Water/Psychic');
+  });
 });

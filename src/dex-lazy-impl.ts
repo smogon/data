@@ -240,6 +240,21 @@ class Generation {
 
 class GenerationalBase {
   constructor(public gen: Generation, public __id: number /* TODO: symbol? */) {}
+
+  toString() {
+    if (Object.getOwnPropertyDescriptor(this, 'name') !== undefined) {
+      return (this as any).name;
+    } else {
+      return 'Unknown game object';
+    }
+  }
+}
+
+// TODO move to a different file?
+class SlashArray extends Array {
+  toString() {
+    return this.join('/').toString();
+  }
 }
 
 class GenFamily<T> extends StoreBase<T> {
@@ -315,7 +330,11 @@ class SpeciesBase extends GenerationalBase {
   get types() {
     const v = this[typesSym];
     if (v === undefined) throw new Error('types not loaded yet');
-    return v.map(id => this.gen.types.resolve(id));
+    const typeArray = new SlashArray();
+    for (const id of v) {
+      typeArray.push(this.gen.types.resolve(id));
+    }
+    return typeArray;
   }
 
   get learnset() {
