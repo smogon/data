@@ -431,7 +431,11 @@ function filterPSDex(dex: PSDexStage2) {
         let inGen;
         if (obj.isNonstandard === 'Past') {
           inGen = false;
-        } else if (obj.gen !== undefined) {
+        } else if (
+          obj.gen !== undefined &&
+          // This can be either null or undefined
+          !obj.isNonstandard
+        ) {
           inGen = gen >= obj.gen;
         } else if (supplementalGens !== undefined) {
           inGen = supplementalGens.includes(gen);
