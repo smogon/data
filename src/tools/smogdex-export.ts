@@ -13,7 +13,7 @@ import {
 import { StatsTable } from '../stats';
 import { PSExt } from '../ps-import';
 
-const genInheritance = ['rb', 'gs', 'rs', 'dp', 'bw', 'xy', 'sm'];
+const genInheritance = ['rb', 'gs', 'rs', 'dp', 'bw', 'xy', 'sm', 'ss'];
 
 function getIntroduction(genFamily: GenFamily<{ gen: { num: number } }>) {
   const introduction = [];
@@ -65,7 +65,7 @@ const TRANSFORMS = {
       }
     } else if (specie.tier === '(OU)') {
       tags.push('OU');
-    } else if (specie.tier === 'Unreleased') {
+    } else if (['Unreleased', 'New'].includes(specie.tier)) {
       tags.push('Limbo');
     } else if (['CAP NFE', 'CAP Uber', 'LC Uber', 'Illegal', 'CAP LC'].includes(specie.tier)) {
     } else if (specie.tier !== 'NFE') {
