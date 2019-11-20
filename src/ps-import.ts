@@ -188,7 +188,7 @@ const PREDS = {
       return false;
     }
 
-    if ((s.forme === 'Galar' || s.forme === 'Gmax') && gen < 8) {
+    if (s.forme !== undefined && (s.forme.endsWith('Galar') || s.forme === 'Gmax') && gen < 8) {
       return false;
     }
 

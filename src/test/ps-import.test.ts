@@ -70,6 +70,11 @@ describe('ps-import', () => {
     expect(getGen(6).species.find(x => x.name.includes('Pokestar'))).toBeUndefined();
   });
 
+  test('galars', () => {
+    expect(getGen(7).species.find(x => x.name.includes('-Galar'))).toBeUndefined();
+    expect(getGen(8).species.find(x => x.name.includes('-Galar'))).toBeDefined();
+  });
+
   test('items', () => {
     expect(getGen(6).items.find(x => x.name === 'Lopunnite')).toBeDefined();
     expect(getGen(8).items.find(x => x.name === 'Lopunnite')).toBeUndefined();
