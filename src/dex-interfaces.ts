@@ -2,6 +2,8 @@ import { GenerationNumber } from './gens';
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export type Present = 'present';
+
 // TypeScript just gives up at inferring an ExtSpec. If we leave just the rich fields ('present') then an extension without any rich fields will trigger "weak type detection" (https://mariusschulz.com/blog/weak-type-detection-in-typescript). But if we leave the [k: string]: unknown bits, then leaving out a type annotation means all fields are present.
 //
 // So for now, just deal with errors where you put something other than
@@ -11,11 +13,11 @@ export type ExtSpec = {
     //[k: string]: unknown;
   };
   species?: {
-    //prevo?: 'present';
-    //evos?: 'present';
-    //abilities?: 'present';
-    //types?: 'present';
-    //learnset?: 'present';
+    //prevo?: Present;
+    //evos?: Present;
+    //abilities?: Present;
+    //types?: Present;
+    //learnset?: Present;
     //[k: string]: unknown;
   };
   abilities?: {
@@ -25,24 +27,22 @@ export type ExtSpec = {
     //[k: string]: unknown;
   };
   moves?: {
-    //type?: 'present';
+    //type?: Present;
   };
   types?: {
     //[k: string]: unknown;
   };
 };
 
-type MaybeField<T, Field extends string> = T extends Record<Field, unknown> ? T[Field] : {};
 type TypeOrElse<T, ElseT> = T extends never ? ElseT : T extends Record<string, never> ? ElseT : T;
-
 // Array may be empty if no fields.
-type ExtField<Ext extends ExtSpec, Field extends string> = MaybeField<Ext, Field>;
+type ExtField<Ext, Field extends string> = Ext extends Record<Field, unknown> ? Ext[Field] : {};
 
 type RichField<
   Ext extends ExtSpec,
   Field extends string,
   R extends Record<string, unknown>
-> = ExtField<Ext, Field> extends Record<keyof R, 'present'> ? R : {};
+> = ExtField<Ext, Field> extends Record<keyof R, Present> ? R : {};
 
 // TODO better name.
 type CollectionField<Ext extends ExtSpec, R extends Record<string, unknown>> = Ext extends Record<
@@ -81,6 +81,42 @@ export type MoveSource = string;
 
 export type Learnset<T> = Array<{ what: T; how: MoveSource[] }>;
 
+type CanBackref<
+  Ext extends ExtSpec,
+  FirstOuter extends string,
+  FirstInner extends string,
+  SecondOuter extends string = FirstInner,
+  SecondInner extends string = FirstOuter
+> = ExtField<ExtField<Ext, FirstOuter>, FirstInner> extends Record<string, never>
+  ? ExtField<ExtField<Ext, SecondOuter>, SecondInner> extends Record<string, never>
+    ? never
+    : Record<FirstOuter, Partial<Record<FirstInner, undefined>>>
+  : Record<SecondOuter, Partial<Record<SecondInner, undefined>>>;
+
+type BackreffableEntry<
+  FirstOuter extends string,
+  FirstInner extends string,
+  SecondOuter extends string,
+  SecondInner extends string
+> = Record<FirstOuter, Record<FirstInner, Record<SecondOuter, Record<SecondInner, any>>>> &
+  Record<SecondOuter, Record<SecondInner, Record<FirstOuter, Record<FirstInner, any>>>>;
+
+type Backreffables = BackreffableEntry<'species', 'types', 'types', 'species'> &
+  BackreffableEntry<'species', 'learnset', 'moves', 'species'> &
+  BackreffableEntry<'moves', 'type', 'types', 'moves'>;
+
+type Backreffable<
+  FirstOuter extends string,
+  FirstInner extends string,
+  SecondOuter extends string,
+  SecondInner extends string
+> = ExtField<
+  ExtField<ExtField<ExtField<Backreffables, FirstOuter>, FirstInner>, SecondOuter>,
+  SecondInner
+> extends Record<string, never>
+  ? never
+  : {};
+
 export type Dex<K extends Format, Ext extends ExtSpec = {}> = {
   gens: Collection<K, Generation<K, Ext>>;
 } & Backref<
@@ -92,33 +128,19 @@ export type Dex<K extends Format, Ext extends ExtSpec = {}> = {
     SecondOuter extends string = FirstInner,
     SecondInner extends string = FirstOuter
   >(
+    this: Dex<
+      K,
+      Ext &
+        Backreffable<FirstOuter, FirstInner, SecondOuter, SecondInner> &
+        CanBackref<Ext, FirstOuter, FirstInner, SecondOuter, SecondInner>
+    >,
     first: [FirstOuter, FirstInner, string?],
     second?: [SecondOuter, SecondInner, string?]
   ) => Dex<
-    'Rich',
+    K,
     Ext &
-      {
-        [o in FirstOuter]: {
-          [i in FirstInner]: TypeOrElse<
-            TypeOrElse<
-              MaybeField<MaybeField<Ext, FirstOuter>, FirstInner>,
-              MaybeField<MaybeField<Ext, SecondOuter>, SecondInner>
-            >,
-            never
-          >;
-        };
-      } &
-      {
-        [i in SecondOuter]: {
-          [o in SecondInner]: TypeOrElse<
-            TypeOrElse<
-              MaybeField<MaybeField<Ext, SecondOuter>, SecondInner>,
-              MaybeField<MaybeField<Ext, FirstOuter>, FirstInner>
-            >,
-            never
-          >;
-        };
-      }
+      Record<FirstOuter, Record<FirstInner, Present>> &
+      Record<SecondOuter, Record<SecondInner, Present>>
   >
 > &
   Backref<K, 'species', Store<GenFamily<Species<K, Ext>>>> & // Cross-generational iterators

@@ -30,7 +30,7 @@ abstract class StoreBase<T> {
     return v;
   }
 
-  *findAll(fn: (obj: T) => boolean) {
+  *filter(fn: (obj: T) => boolean) {
     for (const obj of this) {
       if (fn(obj)) {
         yield obj;
@@ -152,9 +152,15 @@ function assignRemap(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type BackrefEntry = {
+  outer: string;
+  inner: string;
+  key?: string;
+};
+
 type BackrefContainer = {
   [k: string]: {
-    [l: string]: [string, string, string?];
+    [l: string]: BackrefEntry;
   };
 };
 
@@ -189,13 +195,23 @@ export default class Dex {
     [secondOuter, secondInner, secondKey = firstKey] = [firstInner, firstOuter]
   ): Dex {
     if (!(firstOuter in this.backrefs)) this.backrefs[firstOuter] = {};
-    this.backrefs[firstOuter][firstInner] = [secondOuter, secondInner, secondKey];
+    this.backrefs[firstOuter][firstInner] = {
+      outer: secondOuter,
+      inner: secondInner,
+      key: secondKey,
+    };
+
     if (!(secondOuter in this.backrefs)) this.backrefs[secondOuter] = {};
-    this.backrefs[secondOuter][secondInner] = [firstOuter, firstInner, firstKey];
+    this.backrefs[secondOuter][secondInner] = {
+      outer: firstOuter,
+      inner: firstInner,
+      key: firstKey,
+    };
+
     return this;
   }
 
-  getBackref(outer: string, inner: string): [string, string, string?] | undefined {
+  getBackref(outer: string, inner: string): BackrefEntry | undefined {
     return this.backrefs[outer]?.[inner];
   }
 }
@@ -274,14 +290,15 @@ class GenerationalBase {
 
   constructor(public gen: Generation, public __id: number /* TODO: symbol? */) {}
 
-  protected *resolveBackref<T extends GenerationalBase>(
-    outer: string,
-    inner: string,
+  protected *resolveBackref<T>(
+    backrefEntry: BackrefEntry,
     key?: string
   ): Generator<T, void> | undefined {
+    const { outer, inner } = backrefEntry;
+
     const backref = this.gen.dex.getBackref(outer, inner);
     if (backref === undefined) return undefined;
-    const [backrefOuter, backrefInner, backrefKey] = backref;
+    const { outer: backrefOuter, inner: backrefInner, key: backrefKey } = backref;
 
     const type = this.gen[backrefOuter];
     if (!(type instanceof Transformer)) {
@@ -292,8 +309,8 @@ class GenerationalBase {
 
     const getKeyedObject = (obj: Record<string, any>) =>
       backrefKey === undefined ? obj : obj[backrefKey];
-    const result = (type as Transformer<any, T>).findAll(obj => {
-      const o = obj[backrefInner] as any;
+    const result = (type as Transformer<any, T>).filter(obj => {
+      const o = (obj as any)[backrefInner];
       if (o === undefined) {
         throw new Error(
           `required key not found for backref ${outer}.${inner} -> ${backrefOuter}.${backrefInner}`
@@ -319,23 +336,23 @@ class GenerationalBase {
     }
   }
 
-  protected resolveToSymbolOrBackref<T, B extends true = true>(
+  protected resolveToSymbolOrBackref<T>(
     sym: symbol,
     refType: string,
-    isArray: B,
+    isArray: true,
     key?: string,
     backrefOuter?: string,
     backrefInner?: string
   ): T[];
-  protected resolveToSymbolOrBackref<T extends GenerationalBase, B extends false = false>(
+  protected resolveToSymbolOrBackref<T>(
     sym: symbol,
     refType: string,
-    isArray: B,
+    isArray: false,
     key?: string,
     backrefOuter?: string,
     backrefInner?: string
   ): T | undefined;
-  protected resolveToSymbolOrBackref<T extends GenerationalBase>(
+  protected resolveToSymbolOrBackref<T>(
     sym: symbol,
     refType: string,
     isArray = true,
@@ -352,7 +369,10 @@ class GenerationalBase {
 
     if (v === undefined) {
       if (backrefOuter !== undefined && backrefInner !== undefined) {
-        const backref = this.resolveBackref<T>(backrefOuter, backrefInner, key);
+        const backref = this.resolveBackref<T>(
+          { outer: backrefOuter, inner: backrefInner, key },
+          key
+        );
         if (backref !== undefined) {
           if (isArray) return Array.from(backref);
           return backref.next().value as T | undefined;
@@ -369,8 +389,8 @@ class GenerationalBase {
       return newObj;
     };
 
-    if (isArray && Array.isArray(v)) {
-      return v.map(id => {
+    if (isArray) {
+      return (v as any[]).map(id => {
         if (key === undefined) return (this.gen[refType] as Transformer<any, T>).resolve(id);
         return getKeyedObject(id);
       });
