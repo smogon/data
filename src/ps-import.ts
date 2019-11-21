@@ -176,6 +176,10 @@ const PREDS = {
       return false;
     }
 
+    if (s.isNonstandard === 'CAP') {
+      throw new Error(`Missing CAP from supplemental gens list: ${s.species}`);
+    }
+
     if (isMega(s) && gen < 6) {
       return false;
     }
@@ -376,6 +380,7 @@ const idGens = new Map([
   ['kerfluffle', [6, 7]],
   ['stratagem', [4, 5, 6, 7]],
   ['crucibelle', [6, 7]],
+  ['crucibellemega', [6, 7]],
   ['krilowatt', [4, 5, 6, 7]],
   ['cawdet', [5, 6, 7]],
   ['syclar', [4, 5, 6, 7]],
