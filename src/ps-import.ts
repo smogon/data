@@ -463,6 +463,12 @@ function filterPSDex(dex: PSDexStage2) {
         if (gen <= 5 && 'name' in obj) {
           obj.name = renames.get(obj.name) ?? obj.name;
         }
+        // Delete hidden abilities prior to generation 5
+        if (gen < 5 && 'abilities' in obj) {
+          if ("H" in obj.abilities){
+            delete obj.abilities.H;
+          }
+        }
 
         // Gen 2 items, and maybe eventually some < Gen 8 ones?
         obj.desc = obj.desc?.replace(/^\(Gen \w\) /, '');
