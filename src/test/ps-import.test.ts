@@ -145,6 +145,10 @@ describe('ps-import', () => {
 
   test('gen 8', () => {});
 
+  test('hidden ability', () => {
+    expect(getGen(3).species.find1(x => x.name === 'Sharpedo').abilities.find(x => x.name === 'Speed Boost')).toBeUndefined()
+  });
+
   // TODO: move to a diff file?
   test('nice display', () => {
     expect(
