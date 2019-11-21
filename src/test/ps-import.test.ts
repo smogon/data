@@ -160,9 +160,20 @@ describe('ps-import', () => {
   });
 
   test('DPP/ADV hidden ability removal', () => {
-    expect(getGen(3).species.find1(x => x.name === 'Blaziken').abilities.find(x => x.name === 'Speed Boost')).toBeUndefined()
-    expect(getGen(4).species.find1(x => x.name === 'Blaziken').abilities.find(x => x.name === 'Speed Boost')).toBeUndefined()
+    expect(
+      getGen(3)
+        .species.find1(x => x.name === 'Blaziken')
+        .abilities.find(x => x.name === 'Speed Boost')
+    ).toBeUndefined();
+    expect(
+      getGen(4)
+        .species.find1(x => x.name === 'Blaziken')
+        .abilities.find(x => x.name === 'Speed Boost')
+    ).toBeUndefined();
+    expect(
+      getGen(5)
+        .species.find1(x => x.name === 'Blaziken')
+        .abilities.find(x => x.name === 'Speed Boost')
+    ).toBeDefined();
   });
-
-
 });

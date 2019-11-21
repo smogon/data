@@ -466,7 +466,7 @@ function filterPSDex(dex: PSDexStage2) {
 
         // Remove hidden abilities prior to gen 5
         if (gen < 5 && 'abilities' in obj) {
-          if ("H" in obj.abilities){
+          if ('H' in obj.abilities) {
             delete obj.abilities.H;
           }
         }
