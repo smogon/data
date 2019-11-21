@@ -466,9 +466,8 @@ function filterPSDex(dex: PSDexStage2) {
 
         // Remove hidden abilities prior to gen 5
         if (gen < 5 && 'abilities' in obj) {
-          if ('H' in obj.abilities) {
-            delete obj.abilities.H;
-          }
+          obj.abilities = { ...obj.abilities };
+          delete obj.abilities.H;
         }
 
         // Gen 2 items, and maybe eventually some < Gen 8 ones?
