@@ -176,4 +176,25 @@ describe('ps-import', () => {
         .abilities.find(x => x.name === 'Speed Boost')
     ).toBeDefined();
   });
+
+  test('Learnset', () => {
+    const gen3 = getGen(3);
+    expect(
+      gen3.species.find1(x => x.name === 'Magneton').learnset.find(x => x.what.name === 'Explosion')
+    ).toBeUndefined();
+    expect(
+      gen3.species
+        .find1(x => x.name === 'Grumpig')
+        .learnset.find(x => x.what.name === 'Thunder Wave')
+    ).toBeUndefined();
+    expect(
+      gen3.species.find1(x => x.name === 'Steelix').learnset.find(x => x.what.name === 'Curse')
+    ).toBeUndefined();
+    expect(
+      gen3.species.find1(x => x.name === 'Milotic').learnset.find(x => x.what.name === 'Haze')
+    ).toBeUndefined();
+    expect(
+      gen3.species.find1(x => x.name === 'Latias').learnset.find(x => x.what.name === 'Trick')
+    ).toBeUndefined();
+  });
 });

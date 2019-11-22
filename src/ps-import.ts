@@ -461,12 +461,42 @@ function filterPSDex(dex: PSDexStage2) {
         }
         obj.__id = __id;
 
+        //
+        // TODO: Probably need to fuse stuff below with transformPSDex, or have
+        // the PREDS mutate. This is getting out of hand.
+        //
+
         if (gen !== 7) {
           // TODO cleaner way of doing this, just need the test to pass b4 commit
           delete obj.zMovePower;
         }
+
         if (gen <= 5 && 'name' in obj) {
           obj.name = renames.get(obj.name) ?? obj.name;
+        }
+
+        // See team-validator.ts. We ignore level check, ability check, mimic
+        // glitch, limited egg moves, move evo carry count.
+        //
+        // Tradebacks are never considered part of the gen, for now.
+        //
+        // TODO: Parse MoveSource
+        const learnset = obj.learnset as Record<string, string[]> | undefined;
+        if (learnset !== undefined) {
+          obj.learnset = Object.create(null);
+          for (const [moveid, how] of Object.entries(learnset)) {
+            const howFiltered = [];
+            for (const way of how) {
+              const learnedGen = +way.charAt(0);
+              if (learnedGen > gen) {
+                continue;
+              }
+              howFiltered.push(way);
+            }
+            if (howFiltered.length > 0) {
+              obj.learnset[moveid] = howFiltered;
+            }
+          }
         }
 
         // Remove hidden abilities prior to gen 5
