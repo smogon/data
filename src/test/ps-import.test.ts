@@ -180,6 +180,11 @@ describe('ps-import', () => {
   test('Learnset', () => {
     const gen3 = getGen(3);
     expect(
+      gen3.species
+        .find1(x => x.name === 'Blissey')
+        .learnset.find(x => x.what.name === 'Aromatherapy')
+    ).toBeDefined();
+    expect(
       gen3.species.find1(x => x.name === 'Magneton').learnset.find(x => x.what.name === 'Explosion')
     ).toBeUndefined();
     expect(

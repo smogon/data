@@ -650,11 +650,33 @@ const TRANSFORMS = {
       }
     }
 
-    // Pokestars have a missing learnset
-    for (const [moveId, how] of Object.entries(specieIn.learnset ?? [])) {
-      const move = dexIn.moves[moveId];
-      if (move !== undefined) {
-        specieOut.learnset.push({ what: move.__id, how: how as Dex.MoveSource[] });
+    let curSpecieIn = specieIn;
+    while (true) {
+      for (const [moveId, how] of Object.entries(
+        curSpecieIn.learnset ?? [] /* Pokestars have a missing learnset */
+      )) {
+        const move = dexIn.moves[moveId];
+        if (move !== undefined) {
+          // TODO; MoveSource for preevo misleading. Need to extend this
+          specieOut.learnset.push({ what: move.__id, how: how as Dex.MoveSource[] });
+        }
+      }
+
+      if (curSpecieIn.prevo) {
+        curSpecieIn = dexIn.species[curSpecieIn.prevo];
+      } else if (
+        /* logic copied from team-validator.ts, TODO test cases that exercise this logic */
+        curSpecieIn.baseSpecies !== curSpecieIn.species &&
+        (['Rotom', 'Necrozma'].includes(curSpecieIn.baseSpecies) || curSpecieIn.forme === 'Gmax')
+      ) {
+        curSpecieIn = dexIn.species[toID(curSpecieIn.baseSpecies)];
+      } else {
+        break;
+      }
+
+      // This can happen if prevo/baseSpecies added in later gen
+      if (curSpecieIn === undefined) {
+        break;
       }
     }
 
