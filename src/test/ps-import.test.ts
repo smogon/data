@@ -75,6 +75,12 @@ describe('ps-import', () => {
     expect(getGen(8).species.find(x => x.name.includes('-Galar'))).toBeDefined();
   });
 
+  test('gmax', () => {
+    expect(getGen(7).species.find(x => x.name.includes('-Gmax'))).toBeUndefined();
+    const gmax = getGen(8).species.find(x => x.name.includes('-Gmax'));
+    expect(gmax?.isBattleOnly).toBeDefined();
+  });
+
   test('items', () => {
     expect(getGen(6).items.find(x => x.name === 'Lopunnite')).toBeDefined();
     expect(getGen(8).items.find(x => x.name === 'Lopunnite')).toBeUndefined();
