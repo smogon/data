@@ -155,7 +155,9 @@ function exportLearnsets(gen: Generation<'Rich', PSExt>) {
   for (const specie of gen.species) {
     if (specie.isBattleOnly) continue;
     learnsets[getName(specie)] = {
-      moves: specie.learnset.map(({ what }) => getName(what)).filter(x => x !== 'Hidden Power'),
+      moves: Array.from(
+        new Set(specie.learnset.map(({ what }) => getName(what)).filter(x => x !== 'Hidden Power'))
+      ),
     };
   }
 
