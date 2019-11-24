@@ -17,8 +17,11 @@ type ExtraKind = typeof EXTRAKINDS[number];
 
 // This is generally an ID map, but in the case of types, it isn't
 type IDMap = Record<string, any>;
-type PSDexStage1 = Record<GenerationNumber, Record<DataKind | ExtraKind, IDMap>>;
-type PSDexGen = Record<DataKind, IDMap>;
+type PSDexStage1 = Record<
+  GenerationNumber,
+  { num: GenerationNumber } & Record<DataKind | ExtraKind, IDMap>
+>;
+type PSDexGen = { num: GenerationNumber } & Record<DataKind, IDMap>;
 type PSDexStage2 = Record<GenerationNumber, PSDexGen>;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,6 +79,7 @@ function requirePSDex(psDataDir: string): PSDexStage1 {
   const dex = {} as PSDexStage1;
   for (const gen of GENERATIONS) {
     dex[gen] = {
+      num: gen,
       species: requireMap(psDataDir, gen, 'pokedex'),
       formatsData: requireMap(psDataDir, gen, 'formats-data'),
       learnsets: requireMap(psDataDir, gen, 'learnsets'),
@@ -419,7 +423,6 @@ const idGens = new Map([
 
 const idSym = Symbol();
 
-//  After this point generation-agnostic processing should be possible
 function filterPSDex(dex: PSDexStage2) {
   const idMap = {} as Record<DataKind, Map<string, number>>;
 
@@ -462,54 +465,6 @@ function filterPSDex(dex: PSDexStage2) {
           idMap[k].set(id, __id);
         }
         obj[idSym] = __id;
-
-        //
-        // TODO: Probably need to fuse stuff below with transformPSDex, or have
-        // the PREDS mutate. This is getting out of hand.
-        //
-
-        if (gen !== 7) {
-          // TODO cleaner way of doing this, just need the test to pass b4 commit
-          delete obj.zMovePower;
-        }
-
-        if (gen <= 5 && 'name' in obj) {
-          obj.name = renames.get(obj.name) ?? obj.name;
-        }
-
-        // See team-validator.ts. We ignore level check, ability check, mimic
-        // glitch, limited egg moves, move evo carry count.
-        //
-        // Tradebacks are never considered part of the gen, for now.
-        //
-        // TODO: Parse MoveSource
-        const learnset = obj.learnset as Record<string, string[]> | undefined;
-        if (learnset !== undefined) {
-          obj.learnset = Object.create(null);
-          for (const [moveid, how] of Object.entries(learnset)) {
-            const howFiltered = [];
-            for (const way of how) {
-              const learnedGen = +way.charAt(0);
-              if (learnedGen > gen) {
-                continue;
-              }
-              howFiltered.push(way);
-            }
-            if (howFiltered.length > 0) {
-              obj.learnset[moveid] = howFiltered;
-            }
-          }
-        }
-
-        // Remove hidden abilities prior to gen 5
-        if (gen < 5 && 'abilities' in obj) {
-          obj.abilities = { ...obj.abilities };
-          delete obj.abilities.H;
-        }
-
-        // Gen 2 items, and maybe eventually some < Gen 8 ones?
-        obj.desc = obj.desc?.replace(/^\(Gen \w\) /, '');
-        obj.shortDesc = obj.shortDesc?.replace(/^\(Gen \w\) /, '');
       }
     }
   }
@@ -590,13 +545,25 @@ function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+function fixDesc(s: string) {
+  return s.replace(/^\(Gen \w\) /, '');
+}
+
+function rename(num: GenerationNumber, name: string) {
+  if (num <= 5) {
+    return renames.get(name) ?? name;
+  } else {
+    return name;
+  }
+}
+
 const TRANSFORMS = {
   species(dexIn: PSDexGen, specieIn: any): Dex.Species<'Plain', PSExt> {
     const id = toID(specieIn.species);
 
     const specieOut: Dex.Species<'Plain', PSExt> = {
       num: specieIn.num,
-      name: specieIn.species,
+      name: rename(dexIn.num, specieIn.species),
       prevo: dexIn.species[specieIn.prevo ?? '']?.[idSym] ?? null,
       evos: [],
       abilities: [],
@@ -638,7 +605,12 @@ const TRANSFORMS = {
       }
     }
 
-    for (const abilityName of Object.values(specieIn.abilities)) {
+    for (const [abilityType, abilityName] of Object.entries(specieIn.abilities)) {
+      // Hidden abilities don't exist prior to gen 5
+      if (dexIn.num < 5 && abilityType === 'H') {
+        continue;
+      }
+
       const ability = dexIn.abilities[toID(abilityName as string)];
       if (ability !== undefined) {
         specieOut.abilities.push(ability[idSym]);
@@ -659,8 +631,24 @@ const TRANSFORMS = {
       )) {
         const move = dexIn.moves[moveId];
         if (move !== undefined) {
-          // TODO; MoveSource for preevo misleading. Need to extend this
-          specieOut.learnset.push({ what: move[idSym], how: how as Dex.MoveSource[] });
+          // See team-validator.ts. We ignore level check, ability check, mimic
+          // glitch, limited egg moves, move evo carry count.
+          //
+          // Tradebacks are never considered part of the gen, for now.
+          //
+          // TODO: Parse MoveSource
+          const howFiltered = [];
+          for (const way of how as Dex.MoveSource[]) {
+            const learnedGen = +way.charAt(0);
+            if (learnedGen > dexIn.num) {
+              continue;
+            }
+            howFiltered.push(way);
+          }
+          if (howFiltered.length > 0) {
+            // TODO; MoveSource for preevo misleading. Need to extend this
+            specieOut.learnset.push({ what: move[idSym], how: howFiltered as Dex.MoveSource[] });
+          }
         }
       }
 
@@ -687,18 +675,18 @@ const TRANSFORMS = {
 
   abilities(dexIn: PSDexGen, abilityIn: any): Dex.Ability<'Plain', PSExt> {
     return {
-      name: abilityIn.name,
-      shortDesc: abilityIn.shortDesc ?? abilityIn.desc,
-      desc: abilityIn.desc ?? abilityIn.shortDesc,
+      name: rename(dexIn.num, abilityIn.name),
+      shortDesc: fixDesc(abilityIn.shortDesc ?? abilityIn.desc),
+      desc: fixDesc(abilityIn.desc ?? abilityIn.shortDesc),
       isNonstandard: abilityIn.isNonstandard ?? null,
     };
   },
 
   items(dexIn: PSDexGen, itemIn: any): Dex.Item<'Plain', PSExt> {
     return {
-      name: itemIn.name,
-      shortDesc: itemIn.shortDesc ?? itemIn.desc,
-      desc: itemIn.desc ?? itemIn.shortDesc,
+      name: rename(dexIn.num, itemIn.name),
+      shortDesc: fixDesc(itemIn.shortDesc ?? itemIn.desc),
+      desc: fixDesc(itemIn.desc ?? itemIn.shortDesc),
       isNonstandard: itemIn.isNonstandard ?? null,
     };
   },
@@ -709,17 +697,17 @@ const TRANSFORMS = {
       moveIn.type = 'Normal';
     }
     return {
-      name: moveIn.name,
+      name: rename(dexIn.num, moveIn.name),
       type: dexIn.types[toID(moveIn.type)][idSym],
-      shortDesc: moveIn.shortDesc ?? moveIn.desc,
-      desc: moveIn.desc ?? moveIn.shortDesc,
+      shortDesc: fixDesc(moveIn.shortDesc ?? moveIn.desc),
+      desc: fixDesc(moveIn.desc ?? moveIn.shortDesc),
       basePower: moveIn.basePower,
       accuracy: moveIn.accuracy === true ? 'Bypass' : moveIn.accuracy,
       pp: moveIn.pp,
       priority: moveIn.priority,
       category: moveIn.category,
       zMove:
-        moveIn.zMovePower !== undefined
+        dexIn.num === 7 && moveIn.zMovePower !== undefined
           ? {
               power: moveIn.zMovePower,
             }
@@ -730,7 +718,7 @@ const TRANSFORMS = {
   },
   types(dexIn: PSDexGen, typeIn: any): Dex.Type<'Plain', PSExt> {
     return {
-      name: typeIn.name,
+      name: rename(dexIn.num, typeIn.name),
     };
   },
 };
