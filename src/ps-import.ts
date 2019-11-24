@@ -417,6 +417,8 @@ const idGens = new Map([
   ['crucibellite', [6, 7]],
 ]);
 
+const idSym = Symbol();
+
 //  After this point generation-agnostic processing should be possible
 function filterPSDex(dex: PSDexStage2) {
   const idMap = {} as Record<DataKind, Map<string, number>>;
@@ -459,7 +461,7 @@ function filterPSDex(dex: PSDexStage2) {
           __id = idMap[k].size;
           idMap[k].set(id, __id);
         }
-        obj.__id = __id;
+        obj[idSym] = __id;
 
         //
         // TODO: Probably need to fuse stuff below with transformPSDex, or have
@@ -595,7 +597,7 @@ const TRANSFORMS = {
     const specieOut: Dex.Species<'Plain', PSExt> = {
       num: specieIn.num,
       name: specieIn.species,
-      prevo: dexIn.species[specieIn.prevo ?? '']?.__id ?? null,
+      prevo: dexIn.species[specieIn.prevo ?? '']?.[idSym] ?? null,
       evos: [],
       abilities: [],
       types: [],
@@ -616,7 +618,7 @@ const TRANSFORMS = {
         // PS mixes in-battle & out-of-battle formes, untangle
         const forme = dexIn.species[otherForme];
         if (forme !== undefined && isBattleOnly(forme)) {
-          specieOut.altBattleFormes.push(forme.__id);
+          specieOut.altBattleFormes.push(forme[idSym]);
         }
       }
     } else {
@@ -624,7 +626,7 @@ const TRANSFORMS = {
       for (const specieIn2 of Object.values(dexIn.species)) {
         if (isBattleOnly(specieIn2)) continue;
         if (specieIn2.otherFormes?.includes(id)) {
-          specieOut.altBattleFormes.push(specieIn2.__id);
+          specieOut.altBattleFormes.push(specieIn2[idSym]);
         }
       }
     }
@@ -632,21 +634,21 @@ const TRANSFORMS = {
     for (const evoId of specieIn.evos ?? []) {
       const evo = dexIn.species[evoId];
       if (evo !== undefined) {
-        specieOut.evos.push(evo.__id);
+        specieOut.evos.push(evo[idSym]);
       }
     }
 
     for (const abilityName of Object.values(specieIn.abilities)) {
       const ability = dexIn.abilities[toID(abilityName as string)];
       if (ability !== undefined) {
-        specieOut.abilities.push(ability.__id);
+        specieOut.abilities.push(ability[idSym]);
       }
     }
 
     for (const typeName of specieIn.types) {
       const type = dexIn.types[toID(typeName as string)];
       if (type !== undefined) {
-        specieOut.types.push(type.__id);
+        specieOut.types.push(type[idSym]);
       }
     }
 
@@ -658,7 +660,7 @@ const TRANSFORMS = {
         const move = dexIn.moves[moveId];
         if (move !== undefined) {
           // TODO; MoveSource for preevo misleading. Need to extend this
-          specieOut.learnset.push({ what: move.__id, how: how as Dex.MoveSource[] });
+          specieOut.learnset.push({ what: move[idSym], how: how as Dex.MoveSource[] });
         }
       }
 
@@ -708,7 +710,7 @@ const TRANSFORMS = {
     }
     return {
       name: moveIn.name,
-      type: dexIn.types[toID(moveIn.type)].__id,
+      type: dexIn.types[toID(moveIn.type)][idSym],
       shortDesc: moveIn.shortDesc ?? moveIn.desc,
       desc: moveIn.desc ?? moveIn.shortDesc,
       basePower: moveIn.basePower,
@@ -751,7 +753,7 @@ function transformPSDex(dexIn: PSDexStage2): Dex.Dex<'Plain', PSExt> {
       const arr: any[] = [];
 
       for (const v of Object.values(genIn[k])) {
-        arr[v.__id] = TRANSFORMS[k](genIn, v);
+        arr[v[idSym]] = TRANSFORMS[k](genIn, v);
       }
 
       fillArray(arr);
