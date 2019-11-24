@@ -16,19 +16,19 @@ const EXTRAKINDS = ['formatsData', 'learnsets'] as const;
 type ExtraKind = typeof EXTRAKINDS[number];
 
 // This is generally an ID map, but in the case of types, it isn't
-type IDMap = Record<string, any>;
+type PSIDMap = Record<string, any>;
 type PSDexStage1 = Record<
   GenerationNumber,
-  { num: GenerationNumber } & Record<DataKind | ExtraKind, IDMap>
+  { num: GenerationNumber } & Record<DataKind | ExtraKind, PSIDMap>
 >;
-type PSDexGen = { num: GenerationNumber } & Record<DataKind, IDMap>;
+type PSDexGen = { num: GenerationNumber } & Record<DataKind, PSIDMap>;
 type PSDexStage2 = Record<GenerationNumber, PSDexGen>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Loading
 ////////////////////////////////////////////////////////////////////////////////
 
-function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?: string): IDMap {
+function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?: string): PSIDMap {
   const dirComponents = [process.cwd(), psDataDir];
   if (gen !== 8) {
     dirComponents.push('mods', `gen${gen}`);
@@ -51,7 +51,7 @@ function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?
     } else {
       const vs = Object.values(mod);
       if (vs.length === 1) {
-        return vs[0] as IDMap;
+        return vs[0] as PSIDMap;
       } else {
         throw new Error('More than 1 export');
       }
@@ -62,8 +62,8 @@ function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?
 }
 
 // Typechart isn't an IDMap... put a name attr (required) and index by id (for uniformity)
-function fixNonIDMap(mapIn: IDMap): IDMap {
-  const mapOut = {} as IDMap;
+function fixNonPSIDMap(mapIn: PSIDMap): PSIDMap {
+  const mapOut = {} as PSIDMap;
   for (const [name, obj] of Object.entries(mapIn)) {
     // Dark, Steel in gen 1
     // Can't skip, entry needed for gen filter
@@ -86,7 +86,7 @@ function requirePSDex(psDataDir: string): PSDexStage1 {
       abilities: requireMap(psDataDir, gen, 'abilities'),
       items: requireMap(psDataDir, gen, 'items'),
       moves: requireMap(psDataDir, gen, 'moves'),
-      types: fixNonIDMap(requireMap(psDataDir, gen, 'typechart')),
+      types: fixNonPSIDMap(requireMap(psDataDir, gen, 'typechart')),
     };
   }
 
@@ -97,12 +97,12 @@ function requirePSDex(psDataDir: string): PSDexStage1 {
 // Inheritance
 ////////////////////////////////////////////////////////////////////////////////
 
-function inheritMap(mapFrom: IDMap, mapTo: IDMap) {
-  for (const id in mapFrom) {
-    const objFrom = mapFrom[id];
-    let objTo = mapTo[id];
+function inheritMap(mapFrom: PSIDMap, mapTo: PSIDMap) {
+  for (const psid in mapFrom) {
+    const objFrom = mapFrom[psid];
+    let objTo = mapTo[psid];
     if (!objTo) {
-      objTo = mapTo[id] = { inherit: true };
+      objTo = mapTo[psid] = { inherit: true };
     }
     if (objTo.inherit) {
       delete objTo.inherit;
@@ -111,11 +111,11 @@ function inheritMap(mapFrom: IDMap, mapTo: IDMap) {
   }
 }
 
-function mergeMap(map1: IDMap, map2: IDMap) {
+function mergeMap(map1: PSIDMap, map2: PSIDMap) {
   // Must be map1, we want to ignore entries in map2 that don't exist
   // for example, formats-data has mons that don't exist in pokedex
-  for (const id in map1) {
-    Object.assign(map1[id], map2[id]);
+  for (const psid in map1) {
+    Object.assign(map1[psid], map2[psid]);
   }
 }
 
@@ -433,10 +433,10 @@ function filterPSDex(dex: PSDexStage2) {
   for (const gen of GENERATIONS) {
     for (const k of DATAKINDS) {
       const map = dex[gen][k];
-      for (const id in dex[gen][k]) {
-        const obj = map[id];
+      for (const psid in dex[gen][k]) {
+        const obj = map[psid];
 
-        const supplementalGens = idGens.get(id);
+        const supplementalGens = idGens.get(psid);
 
         let inGen;
         if (obj.isNonstandard === 'Past') {
@@ -454,17 +454,17 @@ function filterPSDex(dex: PSDexStage2) {
         }
 
         if (!inGen) {
-          delete map[id];
+          delete map[psid];
           continue;
         }
 
         // Genfamily id
-        let __id = idMap[k].get(id);
-        if (__id === undefined) {
-          __id = idMap[k].size;
-          idMap[k].set(id, __id);
+        let id = idMap[k].get(psid);
+        if (id === undefined) {
+          id = idMap[k].size;
+          idMap[k].set(psid, id);
         }
-        obj[idSym] = __id;
+        obj[idSym] = id;
       }
     }
   }
@@ -559,7 +559,7 @@ function rename(num: GenerationNumber, name: string) {
 
 const TRANSFORMS = {
   species(dexIn: PSDexGen, specieIn: any): Dex.Species<'Plain', PSExt> {
-    const id = toID(specieIn.species);
+    const psid = toID(specieIn.species);
 
     const specieOut: Dex.Species<'Plain', PSExt> = {
       num: specieIn.num,
@@ -592,7 +592,7 @@ const TRANSFORMS = {
       // No convenient indexing; loop through and find what we are an otherForme of.
       for (const specieIn2 of Object.values(dexIn.species)) {
         if (isBattleOnly(specieIn2)) continue;
-        if (specieIn2.otherFormes?.includes(id)) {
+        if (specieIn2.otherFormes?.includes(psid)) {
           specieOut.altBattleFormes.push(specieIn2[idSym]);
         }
       }
