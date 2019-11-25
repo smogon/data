@@ -34,7 +34,6 @@ export type ExtSpec = {
   };
 };
 
-type TypeOrElse<T, ElseT> = T extends never ? ElseT : T extends Record<string, never> ? ElseT : T;
 // Array may be empty if no fields.
 type ExtField<Ext, Field extends string> = Ext extends Record<Field, unknown> ? Ext[Field] : {};
 
@@ -64,9 +63,9 @@ export type Format = 'Plain' | 'Rich';
 
 type Ref<K extends Format, T> = { Plain: number; Rich: T }[K];
 // Can't use { Plain: undefined, Rich: T }, because that requires the key be present in the record. Instead, intersect this record.
-type Backref<K extends Format, Field extends string, T> = {
+type IfRich<K extends Format, T extends Record<string, unknown>> = {
   Plain: {};
-  Rich: Record<Field, T>;
+  Rich: T;
 }[K];
 // TODO: move delta here
 type Collection<K extends Format, T> = { Plain: Array<T | null>; Rich: Store<T> }[K];
@@ -237,54 +236,55 @@ export type BackrefInformation<
 
 export type Dex<K extends Format, Ext extends ExtSpec = {}> = {
   gens: Collection<K, Generation<K, Ext>>;
-} & Backref<
+} & IfRich<
   K,
-  'constructBackref',
-  <
-    FirstOuter extends string,
-    FirstInner extends string,
-    FirstKey extends string | undefined = undefined,
-    FirstMultiple extends boolean | undefined = undefined,
-    SecondOuter extends string = string,
-    SecondInner extends string = string,
-    SecondKey extends string | undefined = undefined,
-    SecondMultiple extends boolean | undefined = undefined
-  >(
-    this: Dex<
+  {
+    constructBackref: <
+      FirstOuter extends string,
+      FirstInner extends string,
+      FirstKey extends string | undefined = undefined,
+      FirstMultiple extends boolean | undefined = undefined,
+      SecondOuter extends string = string,
+      SecondInner extends string = string,
+      SecondKey extends string | undefined = undefined,
+      SecondMultiple extends boolean | undefined = undefined
+    >(
+      this: Dex<
+        K,
+        Ext &
+          Backreffable<
+            FirstOuter,
+            FirstInner,
+            FirstKey,
+            FirstMultiple,
+            SecondOuter,
+            SecondInner,
+            SecondKey,
+            SecondMultiple
+          > &
+          CanBackref<Ext, FirstOuter, FirstInner, SecondOuter, SecondInner>
+      >,
+      first: BackrefInformation<FirstOuter, FirstInner, FirstKey, FirstMultiple>,
+      second: BackrefInformation<SecondOuter, SecondInner, SecondKey, SecondMultiple>
+    ) => Dex<
       K,
       Ext &
-        Backreffable<
-          FirstOuter,
-          FirstInner,
-          FirstKey,
-          FirstMultiple,
-          SecondOuter,
-          SecondInner,
-          SecondKey,
-          SecondMultiple
-        > &
-        CanBackref<Ext, FirstOuter, FirstInner, SecondOuter, SecondInner>
-    >,
-    first: BackrefInformation<FirstOuter, FirstInner, FirstKey, FirstMultiple>,
-    second: BackrefInformation<SecondOuter, SecondInner, SecondKey, SecondMultiple>
-  ) => Dex<
-    K,
-    Ext &
-      Record<FirstOuter, Record<FirstInner, Present>> &
-      Record<SecondOuter, Record<SecondInner, Present>>
-  >
-> &
-  Backref<K, 'species', Store<GenFamily<Species<K, Ext>>>> & // Cross-generational iterators
-  Backref<K, 'abilities', Store<GenFamily<Ability<K, Ext>>>> &
-  Backref<K, 'items', Store<GenFamily<Item<K, Ext>>>> &
-  Backref<K, 'moves', Store<GenFamily<Move<K, Ext>>>> &
-  Backref<K, 'types', Store<GenFamily<Type<K, Ext>>>>;
+        Record<FirstOuter, Record<FirstInner, Present>> &
+        Record<SecondOuter, Record<SecondInner, Present>>
+    >;
+    species: Store<GenFamily<Species<K, Ext>>>;
+    abilities: Store<GenFamily<Ability<K, Ext>>>;
+    items: Store<GenFamily<Item<K, Ext>>>;
+    moves: Store<GenFamily<Move<K, Ext>>>;
+    types: Store<GenFamily<Type<K, Ext>>>;
+  }
+>;
 
 export type Generation<K extends Format, Ext extends ExtSpec = {}> = Omit<
   ExtField<Ext, 'gens'>,
   'species' | 'abilities' | 'items' | 'moves' | 'types' | 'dex'
 > &
-  Backref<K, 'dex', Dex<K, Ext>> &
+  IfRich<K, { dex: Dex<K, Ext> }> &
   CollectionField<Ext, { species: Collection<K, Species<K, Ext>> }> &
   CollectionField<Ext, { abilities: Collection<K, Ability<K, Ext>> }> &
   CollectionField<Ext, { items: Collection<K, Item<K, Ext>> }> &
@@ -299,8 +299,7 @@ export type GameObject<
   Field extends string,
   Exclude extends string
 > = Omit<ExtField<Ext, Field>, Exclude | 'gen' | 'genFamily'> &
-  Backref<K, 'gen', Generation<K, Ext>> &
-  Backref<K, 'genFamily', GenFamily<Me['me']>>;
+  IfRich<K, { gen: Generation<K, Ext>; genFamily: GenFamily<Me['me']> }>;
 
 export type Species<K extends Format, Ext extends ExtSpec = {}> = GameObject<
   K,
