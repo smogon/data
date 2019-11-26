@@ -589,13 +589,9 @@ const TRANSFORMS = {
         }
       }
     } else {
-      // No convenient indexing; loop through and find what we are an otherForme of.
-      for (const specieIn2 of Object.values(dexIn.species)) {
-        if (isBattleOnly(specieIn2)) continue;
-        if (specieIn2.otherFormes?.includes(psid)) {
-          specieOut.altBattleFormes.push(specieIn2[idSym]);
-        }
-      }
+      // This only handles the case where an inBattle forme has one associated
+      // out of battle forme. Anything else must be hardcoded.
+      specieOut.altBattleFormes.push(dexIn.species[toID(specieIn.baseSpecies)][idSym]);
     }
 
     for (const evoId of specieIn.evos ?? []) {

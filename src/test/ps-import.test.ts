@@ -113,6 +113,12 @@ describe('ps-import', () => {
     expect(darmanitanGalar.altBattleFormes[0].name).toBe('Darmanitan-Galar-Zen');
     expect(darmanitanZenGalar.altBattleFormes.length).toBe(1);
     expect(darmanitanZenGalar.altBattleFormes[0].name).toBe('Darmanitan-Galar');
+
+    // Meowth-Gmax should only be associated with Meowth
+    expect(getGen(8).species.find1(x => x.name === 'Meowth-Gmax').altBattleFormes.length).toBe(1);
+    expect(getGen(8).species.find1(x => x.name === 'Meowth-Gmax').altBattleFormes[0].name).toBe(
+      'Meowth'
+    );
   });
 
   test('JSON roundtrippable', () => {
