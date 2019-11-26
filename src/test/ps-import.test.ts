@@ -41,6 +41,10 @@ describe('ps-import', () => {
     expect(getGen(6).moves.find(x => x.name === 'Hi Jump Kick')).toBeUndefined();
     expect(getGen(5).moves.find(x => x.name === 'High Jump Kick')).toBeUndefined();
     expect(getGen(5).moves.find(x => x.name === 'Hi Jump Kick')).toBeDefined();
+
+    expect(getGen(5).moves.find(x => x.name === 'ViceGrip')).toBeDefined();
+    expect(getGen(7).moves.find(x => x.name === 'Vice Grip')).toBeDefined();
+    expect(getGen(8).moves.find(x => x.name === 'Vise Grip')).toBeDefined();
   });
 
   test('moves', () => {

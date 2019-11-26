@@ -303,50 +303,56 @@ const PREDS = {
 
 // Names in gen > 5 => names in gen <= 5
 // TODO Maybe move to a diff file?
-const renames = new Map([
+const renames: Map<string, Array<{ gen: GenerationNumber; name: string }>> = new Map([
   // Moves
-  ['Ancient Power', 'AncientPower'],
-  ['Bubble Beam', 'BubbleBeam'],
-  ['Double Slap', 'DoubleSlap'],
-  ['Dragon Breath', 'DragonBreath'],
-  ['Dynamic Punch', 'DynamicPunch'],
-  ['Extreme Speed', 'ExtremeSpeed'],
-  ['Feint Attack', 'Faint Attack'],
-  ['Feather Dance', 'FeatherDance'],
-  ['Grass Whistle', 'GrassWhistle'],
-  ['High Jump Kick', 'Hi Jump Kick'],
-  ['Poison Powder', 'PoisonPowder'],
-  ['Sand Attack', 'Sand-Attack'],
-  ['Self-Destruct', 'Selfdestruct'],
-  ['Smelling Salts', 'SmellingSalt'],
-  ['Smokescreen', 'SmokeScreen'],
-  ['Soft-Boiled', 'Softboiled'],
-  ['Solar Beam', 'SolarBeam'],
-  ['Sonic Boom', 'SonicBoom'],
-  ['Thunder Punch', 'ThunderPunch'],
-  ['Thunder Shock', 'ThunderShock'],
-  ['Vice Grip', 'ViceGrip'],
+  ['Ancient Power', [{ gen: 5, name: 'AncientPower' }]],
+  ['Bubble Beam', [{ gen: 5, name: 'BubbleBeam' }]],
+  ['Double Slap', [{ gen: 5, name: 'DoubleSlap' }]],
+  ['Dragon Breath', [{ gen: 5, name: 'DragonBreath' }]],
+  ['Dynamic Punch', [{ gen: 5, name: 'DynamicPunch' }]],
+  ['Extreme Speed', [{ gen: 5, name: 'ExtremeSpeed' }]],
+  ['Feint Attack', [{ gen: 5, name: 'Faint Attack' }]],
+  ['Feather Dance', [{ gen: 5, name: 'FeatherDance' }]],
+  ['Grass Whistle', [{ gen: 5, name: 'GrassWhistle' }]],
+  ['High Jump Kick', [{ gen: 5, name: 'Hi Jump Kick' }]],
+  ['Poison Powder', [{ gen: 5, name: 'PoisonPowder' }]],
+  ['Sand Attack', [{ gen: 5, name: 'Sand-Attack' }]],
+  ['Self-Destruct', [{ gen: 5, name: 'Selfdestruct' }]],
+  ['Smelling Salts', [{ gen: 5, name: 'SmellingSalt' }]],
+  ['Smokescreen', [{ gen: 5, name: 'SmokeScreen' }]],
+  ['Soft-Boiled', [{ gen: 5, name: 'Softboiled' }]],
+  ['Solar Beam', [{ gen: 5, name: 'SolarBeam' }]],
+  ['Sonic Boom', [{ gen: 5, name: 'SonicBoom' }]],
+  ['Thunder Punch', [{ gen: 5, name: 'ThunderPunch' }]],
+  ['Thunder Shock', [{ gen: 5, name: 'ThunderShock' }]],
+  [
+    'Vise Grip',
+    [
+      { gen: 5, name: 'ViceGrip' },
+      { gen: 7, name: 'Vice Grip' },
+    ],
+  ],
 
   // Abilities
-  ['Compound Eyes', 'Compoundeyes'],
-  ['Lightning Rod', 'Lightningrod'],
+  ['Compound Eyes', [{ gen: 5, name: 'Compoundeyes' }]],
+  ['Lightning Rod', [{ gen: 5, name: 'Lightningrod' }]],
 
   // Items
-  ['Balm Mushroom', 'BalmMushroom'],
-  ['Black Glasses', 'BlackGlasses'],
-  ['Bright Powder', 'BrightPowder'],
-  ['Deep Sea Scale', 'DeepSeaScale'],
-  ['Deep Sea Tooth', 'DeepSeaTooth'],
-  ['Energy Powder', 'EnergyPowder'],
-  ['Never-Melt Ice', 'NeverMeltIce'],
-  ['Paralyze Heal', 'Parlyz Heal'],
-  ['Rage Candy Bar', 'RageCandyBar'],
-  ['Silver Powder', 'SilverPowder'],
-  ['Thunder Stone', 'Thunderstone'],
-  ['Tiny Mushroom', 'TinyMushroom'],
-  ['Twisted Spoon', 'TwistedSpoon'],
-  ['X Defense', 'X Defend'],
-  ['X Sp. Atk', 'X Special'],
+  ['Balm Mushroom', [{ gen: 5, name: 'BalmMushroom' }]],
+  ['Black Glasses', [{ gen: 5, name: 'BlackGlasses' }]],
+  ['Bright Powder', [{ gen: 5, name: 'BrightPowder' }]],
+  ['Deep Sea Scale', [{ gen: 5, name: 'DeepSeaScale' }]],
+  ['Deep Sea Tooth', [{ gen: 5, name: 'DeepSeaTooth' }]],
+  ['Energy Powder', [{ gen: 5, name: 'EnergyPowder' }]],
+  ['Never-Melt Ice', [{ gen: 5, name: 'NeverMeltIce' }]],
+  ['Paralyze Heal', [{ gen: 5, name: 'Parlyz Heal' }]],
+  ['Rage Candy Bar', [{ gen: 5, name: 'RageCandyBar' }]],
+  ['Silver Powder', [{ gen: 5, name: 'SilverPowder' }]],
+  ['Thunder Stone', [{ gen: 5, name: 'Thunderstone' }]],
+  ['Tiny Mushroom', [{ gen: 5, name: 'TinyMushroom' }]],
+  ['Twisted Spoon', [{ gen: 5, name: 'TwistedSpoon' }]],
+  ['X Defense', [{ gen: 5, name: 'X Defend' }]],
+  ['X Sp. Atk', [{ gen: 5, name: 'X Special' }]],
 ]);
 
 const idGens = new Map([
@@ -549,12 +555,16 @@ function fixDesc(s: string) {
   return s.replace(/^\(Gen \w\) /, '');
 }
 
-function rename(num: GenerationNumber, name: string) {
-  if (num <= 5) {
-    return renames.get(name) ?? name;
-  } else {
-    return name;
+function rename(num: GenerationNumber, newName: string): string {
+  let oldName = newName;
+  let oldGen = GENERATIONS[GENERATIONS.length - 1];
+  for (const { gen, name } of renames.get(newName) ?? []) {
+    if (num <= gen && gen < oldGen) {
+      oldGen = gen;
+      oldName = name;
+    }
   }
+  return oldName;
 }
 
 const TRANSFORMS = {
