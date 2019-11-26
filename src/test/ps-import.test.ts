@@ -119,6 +119,13 @@ describe('ps-import', () => {
     expect(getGen(8).species.find1(x => x.name === 'Meowth-Gmax').altBattleFormes[0].name).toBe(
       'Meowth'
     );
+
+    // Necrozma ultra should only be associated with Dawn-Wings/Dusk-Mane
+    const necroUltra = getGen(7).species.find1(x => x.name === 'Necrozma-Ultra');
+    expect(necroUltra.altBattleFormes.length).toBe(2);
+    expect(new Set(necroUltra.altBattleFormes.map(x => x.name))).toEqual(
+      new Set(['Necrozma-Dusk-Mane', 'Necrozma-Dawn-Wings'])
+    );
   });
 
   test('JSON roundtrippable', () => {

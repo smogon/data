@@ -580,7 +580,27 @@ const TRANSFORMS = {
       // doublesTier: specieIn.doublesTier
     };
 
-    if (!isBattleOnly(specieIn)) {
+    if (
+      dexIn.num === 7 /* Necrozma-Ultra doesn't exist in Gen 8, no altBattleFormes */ &&
+      specieIn.species.startsWith('Necrozma')
+    ) {
+      switch (specieIn.species) {
+        case 'Necrozma':
+          break;
+        case 'Necrozma-Dusk-Mane':
+          specieOut.altBattleFormes.push(dexIn.species['necrozmaultra'][idSym]);
+          break;
+        case 'Necrozma-Dawn-Wings':
+          specieOut.altBattleFormes.push(dexIn.species['necrozmaultra'][idSym]);
+          break;
+        case 'Necrozma-Ultra':
+          specieOut.altBattleFormes.push(dexIn.species['necrozmaduskmane'][idSym]);
+          specieOut.altBattleFormes.push(dexIn.species['necrozmadawnwings'][idSym]);
+          break;
+        default:
+          throw new Error(`Unknown Necrozma ${specieIn.species}`);
+      }
+    } else if (!isBattleOnly(specieIn)) {
       for (const otherForme of specieIn.otherFormes ?? []) {
         // PS mixes in-battle & out-of-battle formes, untangle
         const forme = dexIn.species[otherForme];
