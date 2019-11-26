@@ -196,7 +196,7 @@ const PREDS = {
       return false;
     }
 
-    if (s.forme !== undefined && (s.forme.endsWith('Galar') || s.forme === 'Gmax') && gen < 8) {
+    if (s.forme !== undefined && (s.species.includes('-Galar') || s.forme === 'Gmax') && gen < 8) {
       return false;
     }
 
@@ -590,9 +590,9 @@ const TRANSFORMS = {
           specieOut.altBattleFormes.push(dexIn.species['darmanitan'][idSym]);
           break;
         case 'Darmanitan-Galar':
-          specieOut.altBattleFormes.push(dexIn.species['darmanitanzengalar'][idSym]);
+          specieOut.altBattleFormes.push(dexIn.species['darmanitangalarzen'][idSym]);
           break;
-        case 'Darmanitan-Zen-Galar':
+        case 'Darmanitan-Galar-Zen':
           specieOut.altBattleFormes.push(dexIn.species['darmanitangalar'][idSym]);
           break;
       }

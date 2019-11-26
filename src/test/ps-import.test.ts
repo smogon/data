@@ -99,18 +99,18 @@ describe('ps-import', () => {
     // shouldn't include out-of-battle otherFormes
     expect(getGen(7).species.find1(x => x.name === 'Rotom').altBattleFormes).toStrictEqual([]);
 
-    // Darmanitan and Darmanitan-Zen-Galar are not related via altBattleFormes
+    // Darmanitan and Darmanitan-Galar-Zen are not related via altBattleFormes
     // TODO: really need better Jest methods for comparing rich objects!
     const darmanitan = getGen(8).species.find1(x => x.name === 'Darmanitan');
     const darmanitanZen = getGen(8).species.find1(x => x.name === 'Darmanitan-Zen');
     const darmanitanGalar = getGen(8).species.find1(x => x.name === 'Darmanitan-Galar');
-    const darmanitanZenGalar = getGen(8).species.find1(x => x.name === 'Darmanitan-Zen-Galar');
+    const darmanitanZenGalar = getGen(8).species.find1(x => x.name === 'Darmanitan-Galar-Zen');
     expect(darmanitan.altBattleFormes.length).toBe(1);
     expect(darmanitan.altBattleFormes[0].name).toBe('Darmanitan-Zen');
     expect(darmanitanZen.altBattleFormes.length).toBe(1);
     expect(darmanitanZen.altBattleFormes[0].name).toBe('Darmanitan');
     expect(darmanitanGalar.altBattleFormes.length).toBe(1);
-    expect(darmanitanGalar.altBattleFormes[0].name).toBe('Darmanitan-Zen-Galar');
+    expect(darmanitanGalar.altBattleFormes[0].name).toBe('Darmanitan-Galar-Zen');
     expect(darmanitanZenGalar.altBattleFormes.length).toBe(1);
     expect(darmanitanZenGalar.altBattleFormes[0].name).toBe('Darmanitan-Galar');
   });
