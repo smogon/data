@@ -34,6 +34,9 @@ function getName(obj: { genFamily: { latest: { name: string } } }) {
     name = 'Flabebe';
   } else if (name === 'Meowstic') {
     name = 'Meowstic-M';
+  } else if (name === 'Vise Grip') {
+    // Can't handle this rename yet, will break old links
+    name = 'Vice Grip';
   }
   return name;
 }
