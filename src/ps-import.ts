@@ -580,7 +580,23 @@ const TRANSFORMS = {
       // doublesTier: specieIn.doublesTier
     };
 
-    if (!isBattleOnly(specieIn)) {
+    // HACK until we figure out to do with the PS data
+    if (dexIn.num === 8 && specieIn.species.startsWith('Darmanitan')) {
+      switch (specieIn.species) {
+        case 'Darmanitan':
+          specieOut.altBattleFormes.push(dexIn.species['darmanitanzen'][idSym]);
+          break;
+        case 'Darmanitan-Zen':
+          specieOut.altBattleFormes.push(dexIn.species['darmanitan'][idSym]);
+          break;
+        case 'Darmanitan-Galar':
+          specieOut.altBattleFormes.push(dexIn.species['darmanitanzengalar'][idSym]);
+          break;
+        case 'Darmanitan-Zen-Galar':
+          specieOut.altBattleFormes.push(dexIn.species['darmanitangalar'][idSym]);
+          break;
+      }
+    } else if (!isBattleOnly(specieIn)) {
       for (const otherForme of specieIn.otherFormes ?? []) {
         // PS mixes in-battle & out-of-battle formes, untangle
         const forme = dexIn.species[otherForme];
