@@ -1,5 +1,3 @@
-import { BackrefInformation } from './dex-interfaces';
-
 // If all sources for an id are null, then it isn't a member of this
 // generation. If one source has null and another has a record, then the null
 // contributes nothing.
@@ -41,7 +39,7 @@ abstract class StoreBase<T> {
   }
 }
 
-class Transformer<Src, Dest> extends StoreBase<Dest> {
+export class Transformer<Src, Dest> extends StoreBase<Dest> {
   private sourceInnerLength = 0;
 
   constructor(
@@ -209,7 +207,7 @@ function assignRemap(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class Dex {
+export class Dex {
   gens: Transformer<any, Generation>;
   species: GenFamilyStore<Species>;
   abilities: GenFamilyStore<Ability>;
@@ -231,139 +229,11 @@ export default class Dex {
     this.moves = new GenFamilyStore(this, 'moves');
     this.types = new GenFamilyStore(this, 'types');
   }
-
-  constructBackref(first: BackrefInformation, second: BackrefInformation): Dex {
-    generateBackrefs(this, first, second);
-    return this;
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Backreffing
-
-function backrefIsLeftToRight(dex: Dex, outer: string, inner: string) {
-  // ASSUMPTION: our sources will always contain at least one non-null delta
-  for (const gen of dex.gens) {
-    const genOuter = gen[outer] as Transformer<any, GenerationalBase>;
-    for (const [sources] of genOuter.sourcesById()) {
-      for (const source of sources) {
-        if (source !== undefined && source !== null && inner in source) {
-          return false;
-        }
-      }
-    }
-    break;
-  }
-
-  return true;
-}
-
-function generateBackrefs(dex: Dex, first: BackrefInformation, second: BackrefInformation) {
-  // Swap first and second if needed so that backref is always
-  // first (exists) -> second (construct)
-  if (!backrefIsLeftToRight(dex, second.path[0], second.path[1])) {
-    [first, second] = [second, first];
-  }
-
-  const [firstOuter, firstInner, firstKey] = first.path;
-  const [secondOuter, secondInner, secondKey] = second.path;
-
-  // Perform backref
-  for (const gen of dex.gens) {
-    // Map second -> first
-    const results = getGenerationBackrefData(gen, firstOuter, firstInner, firstKey, secondKey);
-
-    // Add to second sources
-    const transformer = gen[secondOuter] as Transformer<any, GenerationalBase>;
-    transformer.mapSource(
-      (data, id) => {
-        const backrefData = second.multiple !== false ? results[id] : results[id][0];
-        // Add to internal-use source
-        data[0][secondInner] = backrefData;
-      },
-      (obj, id) => {
-        const sym = (obj.constructor as typeof GenerationalBase).REMAP[secondInner];
-        (obj as any)[sym ?? secondInner] = results[id];
-      }
-    );
-  }
-}
-
-function getGenerationBackrefData(
-  gen: Generation,
-  firstOuter: string,
-  firstInner: string,
-  firstKey?: string,
-  secondKey?: string
-) {
-  const createObj = (from: Record<string, any>, newId: number) => {
-    if (secondKey === undefined) return newId;
-    if (firstKey === undefined) return { [secondKey]: newId };
-
-    const obj = Object.assign({}, from);
-    delete obj[firstKey];
-    obj[secondKey] = newId;
-    return obj;
-  };
-
-  const results: Record<number, Array<number | Record<string, number>>> = {};
-  const addToResults = (key: number, data: number | Record<string, number>) => {
-    if (!(key in results)) results[key] = [];
-    results[key].push(data);
-  };
-
-  const transformer = gen[firstOuter] as Transformer<any, GenerationalBase>;
-  let sourceIdx: number | undefined;
-
-  for (const [source, id] of transformer.sourcesById()) {
-    if (sourceIdx === undefined) {
-      // Find what source `firstInner` is in
-      let found = false;
-      for (let i = 0, len = source.length; i < len; i++) {
-        if (source[i] !== undefined && source[i] !== null) {
-          found = true;
-
-          if (firstInner in source[i]) {
-            sourceIdx = i;
-            break;
-          }
-        }
-      }
-      if (!found) continue;
-
-      if (sourceIdx === undefined) {
-        throw new Error(`could not find ${firstOuter}.${firstInner} in any source to backref`);
-      }
-    }
-
-    const src = source[sourceIdx];
-    if (src === undefined || src === null) continue;
-
-    const backref = src[firstInner];
-    if (Array.isArray(backref)) {
-      for (const item of backref) {
-        if (firstKey === undefined) {
-          addToResults(item, createObj(item, id));
-        } else {
-          addToResults(item[firstKey], createObj(item, id));
-        }
-      }
-    } else {
-      if (firstKey === undefined) {
-        addToResults(backref, createObj(backref, id));
-      } else {
-        addToResults(backref[firstKey], createObj(backref, id));
-      }
-    }
-  }
-
-  return results;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-class Generation {
+export class Generation {
   species: Transformer<any, Species>;
   abilities: Transformer<any, Ability>;
   items: Transformer<any, Item>;
@@ -413,7 +283,7 @@ class Generation {
   }
 }
 
-class GenerationalBase {
+export class GenerationalBase {
   static REMAP: { [key: string]: symbol } = {};
   [k: string]: unknown;
 

@@ -1,4 +1,5 @@
 import { loader, Dex, GenerationNumber } from '../index';
+import { constructBackref } from '../backref';
 
 describe('lazy impl', () => {
   const dexSrc1: Dex<
@@ -154,13 +155,19 @@ describe('lazy impl', () => {
     const originalEmber = originalGen1.moves.find1(({ name }) => name === 'Ember');
     expect(() => (originalEmber as any).species).toThrow('not loaded');
 
-    const backrefDex = dex
-      .constructBackref(
-        { path: ['species', 'learnset', 'what'] },
-        { path: ['moves', 'species', 'what'] }
-      )
-      .constructBackref({ path: ['species', 'types'] }, { path: ['types', 'species'] })
-      .constructBackref({ path: ['moves', 'type'], multiple: false }, { path: ['types', 'moves'] });
+    const backrefDex = constructBackref(
+      constructBackref(
+        constructBackref(
+          dex,
+          { path: ['species', 'learnset', 'what'] },
+          { path: ['moves', 'species', 'what'] }
+        ),
+        { path: ['species', 'types'] },
+        { path: ['types', 'species'] }
+      ),
+      { path: ['moves', 'type'], multiple: false },
+      { path: ['types', 'moves'] }
+    );
 
     const gen1 = backrefDex.gens.find1(({ num }) => num === 1);
     const specie = gen1.species.find1(({ name }) => name === 'Charmander');

@@ -35,7 +35,9 @@ export type ExtSpec = {
 };
 
 // Array may be empty if no fields.
-type ExtField<Ext, Field extends string> = Ext extends Record<Field, unknown> ? Ext[Field] : {};
+export type ExtField<Ext, Field extends string> = Ext extends Record<Field, unknown>
+  ? Ext[Field]
+  : {};
 
 type RichField<
   Ext extends ExtSpec,
@@ -80,198 +82,11 @@ export type MoveSource = string;
 
 export type Learnset<T> = Array<{ what: T; how: MoveSource[] }>;
 
-type BackrefUndefined = 'UNDEFINED';
-type BackrefTrue = 'TRUE';
-type BackrefFalse = 'FALSE';
-
-type CanBackref<
-  Ext extends ExtSpec,
-  FirstOuter extends string,
-  FirstInner extends string,
-  SecondOuter extends string = FirstInner,
-  SecondInner extends string = FirstOuter
-> = ExtField<ExtField<Ext, FirstOuter>, FirstInner> extends Record<string, never>
-  ? ExtField<ExtField<Ext, SecondOuter>, SecondInner> extends Record<string, never>
-    ? never
-    : Record<FirstOuter, Partial<Record<FirstInner, undefined>>>
-  : Record<SecondOuter, Partial<Record<SecondInner, undefined>>>;
-
-type BackreffableEntry<
-  FirstOuter extends string,
-  FirstInner extends string,
-  FirstKey extends string | undefined,
-  FirstMultiple extends boolean | undefined,
-  SecondOuter extends string,
-  SecondInner extends string,
-  SecondKey extends string | undefined,
-  SecondMultiple extends boolean | undefined
-> = Record<
-  FirstOuter,
-  Record<
-    FirstInner,
-    Record<
-      FirstKey extends undefined ? BackrefUndefined : FirstKey,
-      Record<
-        FirstMultiple extends undefined
-          ? BackrefUndefined | BackrefTrue
-          : FirstMultiple extends true
-          ? BackrefTrue | BackrefUndefined
-          : BackrefFalse,
-        Record<
-          SecondOuter,
-          Record<
-            SecondInner,
-            Record<
-              SecondKey extends undefined ? BackrefUndefined : SecondKey,
-              Record<
-                SecondMultiple extends undefined
-                  ? BackrefUndefined | BackrefTrue
-                  : SecondMultiple extends true
-                  ? BackrefTrue | BackrefUndefined
-                  : BackrefFalse,
-                any
-              >
-            >
-          >
-        >
-      >
-    >
-  >
-> &
-  Record<
-    SecondOuter,
-    Record<
-      SecondInner,
-      Record<
-        SecondKey extends undefined ? BackrefUndefined : SecondKey,
-        Record<
-          SecondMultiple extends undefined
-            ? BackrefUndefined | BackrefTrue
-            : SecondMultiple extends true
-            ? BackrefTrue | BackrefUndefined
-            : BackrefFalse,
-          Record<
-            FirstOuter,
-            Record<
-              FirstInner,
-              Record<
-                FirstKey extends undefined ? BackrefUndefined : FirstKey,
-                Record<
-                  FirstMultiple extends undefined
-                    ? BackrefUndefined | BackrefTrue
-                    : FirstMultiple extends true
-                    ? BackrefTrue | BackrefUndefined
-                    : BackrefFalse,
-                  any
-                >
-              >
-            >
-          >
-        >
-      >
-    >
-  >;
-
-type Backreffables = BackreffableEntry<
-  'types',
-  'species',
-  undefined,
-  true,
-  'species',
-  'types',
-  undefined,
-  true
-> &
-  BackreffableEntry<'species', 'learnset', 'what', true, 'moves', 'species', 'what', true> &
-  BackreffableEntry<'moves', 'type', undefined, false, 'types', 'moves', undefined, true>;
-
-type Backreffable<
-  FirstOuter extends string,
-  FirstInner extends string,
-  FirstKey extends string | undefined,
-  FirstMultiple extends boolean | undefined,
-  SecondOuter extends string,
-  SecondInner extends string,
-  SecondKey extends string | undefined,
-  SecondMultiple extends boolean | undefined
-> = ExtField<
-  ExtField<
-    ExtField<
-      ExtField<
-        ExtField<
-          ExtField<
-            ExtField<ExtField<Backreffables, FirstOuter>, FirstInner>,
-            FirstKey extends undefined ? BackrefUndefined : FirstKey
-          >,
-          FirstMultiple extends undefined
-            ? BackrefUndefined
-            : FirstMultiple extends true
-            ? BackrefTrue
-            : BackrefFalse
-        >,
-        SecondOuter
-      >,
-      SecondInner
-    >,
-    SecondKey extends undefined ? BackrefUndefined : SecondKey
-  >,
-  SecondMultiple extends undefined
-    ? BackrefUndefined
-    : SecondMultiple extends true
-    ? BackrefTrue
-    : BackrefFalse
-> extends Record<string, never>
-  ? never
-  : {};
-
-export type BackrefInformation<
-  Outer extends string = string,
-  Inner extends string = string,
-  Key extends string | undefined = undefined,
-  Multiple extends boolean | undefined = undefined
-> = {
-  path: [Outer, Inner] | [Outer, Inner, Key];
-  multiple?: Multiple;
-};
-
 export type Dex<K extends Format, Ext extends ExtSpec = {}> = {
   gens: Collection<K, Generation<K, Ext>>;
 } & IfRich<
   K,
   {
-    constructBackref: <
-      FirstOuter extends string,
-      FirstInner extends string,
-      FirstKey extends string | undefined = undefined,
-      FirstMultiple extends boolean | undefined = undefined,
-      SecondOuter extends string = string,
-      SecondInner extends string = string,
-      SecondKey extends string | undefined = undefined,
-      SecondMultiple extends boolean | undefined = undefined
-    >(
-      this: Dex<
-        K,
-        Ext &
-          Backreffable<
-            FirstOuter,
-            FirstInner,
-            FirstKey,
-            FirstMultiple,
-            SecondOuter,
-            SecondInner,
-            SecondKey,
-            SecondMultiple
-          > &
-          CanBackref<Ext, FirstOuter, FirstInner, SecondOuter, SecondInner>
-      >,
-      first: BackrefInformation<FirstOuter, FirstInner, FirstKey, FirstMultiple>,
-      second: BackrefInformation<SecondOuter, SecondInner, SecondKey, SecondMultiple>
-    ) => Dex<
-      K,
-      Ext &
-        Record<FirstOuter, Record<FirstInner, Present>> &
-        Record<SecondOuter, Record<SecondInner, Present>>
-    >;
     species: Store<GenFamily<Species<K, Ext>>>;
     abilities: Store<GenFamily<Ability<K, Ext>>>;
     items: Store<GenFamily<Item<K, Ext>>>;

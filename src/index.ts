@@ -5,7 +5,7 @@ export { Stats, StatName, StatsTable, BoostName, BoostsTable } from './stats';
 
 export * from './dex-interfaces';
 import * as I from './dex-interfaces';
-import Dex from './dex-lazy-impl';
+import { Dex } from './dex-lazy-impl';
 
 class Loader<Ext extends I.ExtSpec> {
   constructor(private sources: any[]) {}
