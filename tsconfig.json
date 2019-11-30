@@ -6,5 +6,6 @@
     "esModuleInterop": true,
     "outDir": "./build",
     "pretty": null,
+    "noErrorTruncation": true,
   }
 }
