@@ -1,13 +1,4 @@
-// If all sources for an id are null, then it isn't a member of this
-// generation. If one source has null and another has a record, then the null
-// contributes nothing.
-//
-// TODO: allow an object ("sparse") representation
-//
-// TODO: support generational deltas, but need a mask of which objects are in
-// the generation
-type Delta<T> = Array<T | null>;
-type Source<T> = Array<Delta<T>>;
+import { Source, PrimSource, MultiSource } from './source';
 
 // TODO: maybe move to its own file, if we add more advanced search?
 abstract class StoreBase<T> {
@@ -33,8 +24,8 @@ abstract class StoreBase<T> {
 
 class Transformer<Src, Dest> extends StoreBase<Dest> {
   constructor(
-    private source: Source<Src>,
-    private fn: (id: number, source: Source<Src>) => Dest,
+    private source: Source,
+    private fn: (id: number, source: Source) => Dest,
     private cache: Dest[] = []
   ) {
     super();
@@ -46,25 +37,11 @@ class Transformer<Src, Dest> extends StoreBase<Dest> {
       return v;
     }
 
-    // TODO: lift into this.fn
-    let found = false;
-    for (const src of this.source) {
-      const x = src[id];
-      if (!(x === undefined || x === null)) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
+    if (!this.source.exists(id)) {
       return undefined;
     }
 
     v = this.fn(id, this.source);
-
-    // TODO: not possible atm
-    if (v === undefined) {
-      return undefined;
-    }
 
     this.cache[id] = v;
     return v;
@@ -77,13 +54,7 @@ class Transformer<Src, Dest> extends StoreBase<Dest> {
   }
 
   *[Symbol.iterator]() {
-    // TODO: more efficient hole skipping
-    let length = 0;
-    for (const source of this.source) {
-      length = Math.max(length, source.length);
-    }
-
-    for (let i = 0; i < length; i++) {
+    for (let i = this.source.start; i < this.source.end; i++) {
       const v = this.get(i);
       if (v === undefined) continue;
       yield v;
@@ -122,45 +93,52 @@ class GenFamilyStore<T> extends StoreBase<GenFamily<T>> {
   }
 }
 
-function assignRemap(
-  remap: Record<string, symbol>,
-  dest: any,
-  id: number,
-  srcs: Source<Record<string, unknown>>
-) {
-  // TODO need a better naming scheme for sources/deltas...
-  for (const delta of srcs) {
-    const src = delta[id];
-    // src can be null, reminder that for-in on null is a no-op
-    for (const k in src) {
-      if (k in remap) {
-        dest[remap[k]] = src[k];
-      } else {
-        dest[k] = src[k];
-      }
-    }
+////////////////////////////////////////////////////////////////////////////////
+
+// TODO
+// This is a temporary abstraction to make things work while refactoring Source.
+class StoreArray<T> extends StoreBase<T> {
+  constructor(private arr: T[]) {
+    super();
+  }
+  [Symbol.iterator]() {
+    return this.arr[Symbol.iterator]();
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 export default class Dex {
-  gens: Transformer<any, Generation>;
+  gens: StoreArray<Generation>; // TODO
   species: GenFamilyStore<Species>;
   abilities: GenFamilyStore<Ability>;
   items: GenFamilyStore<Item>;
   moves: GenFamilyStore<Move>;
   types: GenFamilyStore<Type>;
 
-  constructor(dexSrc: any[]) {
+  constructor(dexSrc: Array<{ gens: any }>) {
+    const gens: Generation[] = [];
+
     const genSrc: any[] = [];
-    this.gens = new Transformer(
-      genSrc,
-      (id: number, gen: Source<any>) => new Generation(this, id, gen)
-    );
     for (const dex of dexSrc) {
       genSrc.push(dex.gens);
     }
+
+    for (let i = 0; ; i++) {
+      let stop = true;
+      for (const gen of genSrc) {
+        if (gen[i]) {
+          stop = false;
+          break;
+        }
+      }
+      if (stop) {
+        break;
+      }
+
+      gens.push(new Generation(this, i, genSrc));
+    }
+
+    this.gens = new StoreArray(gens);
+
     this.species = new GenFamilyStore(this, 'species');
     this.abilities = new GenFamilyStore(this, 'abilities');
     this.items = new GenFamilyStore(this, 'items');
@@ -179,35 +157,26 @@ class Generation {
   types: Transformer<any, Type>;
   [k: string]: unknown;
 
-  constructor(public dex: Dex, id: number, genSrc: Source<any>) {
+  constructor(public dex: Dex, id: number, genSrc: any /* TODO */) {
     // Explicitly relying on the ability to mutate this before accessing a
     // transformer element
-    const speciesSrc: any[] = [];
-    const abilitiesSrc: any[] = [];
-    const itemsSrc: any[] = [];
-    const movesSrc: any[] = [];
-    const typesSrc: any[] = [];
+    const speciesSrc = new MultiSource();
+    const abilitiesSrc = new MultiSource();
+    const itemsSrc = new MultiSource();
+    const movesSrc = new MultiSource();
+    const typesSrc = new MultiSource();
 
     this.species = new Transformer(
       speciesSrc,
-      (id: number, specie: Source<any>) => new Species(this, id, specie)
+      (id: number, specie: Source) => new Species(this, id, specie)
     );
     this.abilities = new Transformer(
       abilitiesSrc,
-      (id: number, ability: Source<any>) => new Ability(this, id, ability)
+      (id: number, ability: Source) => new Ability(this, id, ability)
     );
-    this.items = new Transformer(
-      itemsSrc,
-      (id: number, item: Source<any>) => new Item(this, id, item)
-    );
-    this.moves = new Transformer(
-      movesSrc,
-      (id: number, move: Source<any>) => new Move(this, id, move)
-    );
-    this.types = new Transformer(
-      typesSrc,
-      (id: number, type: Source<any>) => new Type(this, id, type)
-    );
+    this.items = new Transformer(itemsSrc, (id: number, item: Source) => new Item(this, id, item));
+    this.moves = new Transformer(movesSrc, (id: number, move: Source) => new Move(this, id, move));
+    this.types = new Transformer(typesSrc, (id: number, type: Source) => new Type(this, id, type));
 
     // Can we abstract this logic into assignRemap?
     for (const delta of genSrc) {
@@ -215,19 +184,31 @@ class Generation {
       for (const k in gen) {
         switch (k) {
           case 'species':
-            speciesSrc.push(gen[k]);
+            speciesSrc.add(
+              new PrimSource(
+                gen[k],
+                new Map([
+                  ['prevo', prevoSym],
+                  ['evos', evosSym],
+                  ['abilities', abilitiesSym],
+                  ['types', typesSym],
+                  ['learnset', learnsetSym],
+                  ['altBattleFormes', altBattleFormesSym],
+                ])
+              )
+            );
             break;
           case 'abilities':
-            abilitiesSrc.push(gen[k]);
+            abilitiesSrc.add(new PrimSource(gen[k], new Map()));
             break;
           case 'items':
-            itemsSrc.push(gen[k]);
+            itemsSrc.add(new PrimSource(gen[k], new Map()));
             break;
           case 'moves':
-            movesSrc.push(gen[k]);
+            movesSrc.add(new PrimSource(gen[k], new Map([['type', typeSym]])));
             break;
           case 'types':
-            typesSrc.push(gen[k]);
+            typesSrc.add(new PrimSource(gen[k], new Map()));
             break;
           default:
             this[k] = gen[k];
@@ -355,21 +336,9 @@ class SpeciesBase extends GenerationalBase {
 class Species extends SpeciesBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, id: number, specie: Source<any>) {
+  constructor(gen: Generation, id: number, specie: Source) {
     super(gen, id);
-    assignRemap(
-      {
-        prevo: prevoSym,
-        evos: evosSym,
-        abilities: abilitiesSym,
-        types: typesSym,
-        learnset: learnsetSym,
-        altBattleFormes: altBattleFormesSym,
-      },
-      this,
-      id,
-      specie
-    );
+    specie.assign(this, id);
   }
 }
 
@@ -382,9 +351,9 @@ class Ability extends GenerationalBase {
     return makeGenFamily(this, 'abilities');
   }
 
-  constructor(gen: Generation, id: number, ability: Source<any>) {
+  constructor(gen: Generation, id: number, ability: Source) {
     super(gen, id);
-    assignRemap({}, this, id, ability);
+    ability.assign(this, id);
   }
 }
 
@@ -397,9 +366,9 @@ class Item extends GenerationalBase {
     return makeGenFamily(this, 'items');
   }
 
-  constructor(gen: Generation, id: number, item: Source<any>) {
+  constructor(gen: Generation, id: number, item: Source) {
     super(gen, id);
-    assignRemap({}, this, id, item);
+    item.assign(this, id);
   }
 }
 
@@ -424,9 +393,9 @@ class MoveBase extends GenerationalBase {
 class Move extends MoveBase {
   [k: string]: unknown;
 
-  constructor(gen: Generation, id: number, move: Source<any>) {
+  constructor(gen: Generation, id: number, move: Source) {
     super(gen, id);
-    assignRemap({ type: typeSym }, this, id, move);
+    move.assign(this, id);
   }
 }
 
@@ -439,8 +408,8 @@ class Type extends GenerationalBase {
     return makeGenFamily(this, 'types');
   }
 
-  constructor(gen: Generation, id: number, type: Source<any>) {
+  constructor(gen: Generation, id: number, type: Source) {
     super(gen, id);
-    assignRemap({}, this, id, type);
+    type.assign(this, id);
   }
 }
