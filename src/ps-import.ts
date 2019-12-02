@@ -718,6 +718,41 @@ const TRANSFORMS = {
   },
 
   moves(dexIn: PSDexGen, moveIn: any): Dex.Move<'Plain', PSExt> {
+    let zMove: { power: number } | null = null;
+    if (dexIn.num === 7 && moveIn.category !== 'Status') {
+      let zMovePower = moveIn.zMovePower;
+
+      if (!zMovePower) {
+        let basePower = moveIn.basePower;
+        if (Array.isArray(moveIn.multihit)) basePower *= 3;
+        if (!basePower) {
+          zMovePower = 100;
+        } else if (basePower >= 140) {
+          zMovePower = 200;
+        } else if (basePower >= 130) {
+          zMovePower = 195;
+        } else if (basePower >= 120) {
+          zMovePower = 190;
+        } else if (basePower >= 110) {
+          zMovePower = 185;
+        } else if (basePower >= 100) {
+          zMovePower = 180;
+        } else if (basePower >= 90) {
+          zMovePower = 175;
+        } else if (basePower >= 80) {
+          zMovePower = 160;
+        } else if (basePower >= 70) {
+          zMovePower = 140;
+        } else if (basePower >= 60) {
+          zMovePower = 120;
+        } else {
+          zMovePower = 100;
+        }
+      }
+
+      zMove = { power: zMovePower };
+    }
+
     // TODO, add to old gen typechart?
     if (moveIn.type === '???') {
       moveIn.type = 'Normal';
@@ -732,12 +767,7 @@ const TRANSFORMS = {
       pp: moveIn.pp,
       priority: moveIn.priority,
       category: moveIn.category,
-      zMove:
-        dexIn.num === 7 && moveIn.zMovePower !== undefined
-          ? {
-              power: moveIn.zMovePower,
-            }
-          : null,
+      zMove,
       isNonstandard: moveIn.isNonstandard ?? null,
       target: capitalize(moveIn.target) as MoveTarget,
     };
