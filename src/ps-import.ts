@@ -567,6 +567,30 @@ function rename(num: GenerationNumber, newName: string): string {
   return oldName;
 }
 
+function inheritsLearnsetFrom(specieIn: {
+  baseSpecies: string;
+  forme?: string;
+  inheritsLearnsetFrom?: string;
+}): string | undefined {
+  if (specieIn.forme === 'Gmax') {
+    return toID(specieIn.baseSpecies) as string /* TODO */;
+  } else if (specieIn.inheritsLearnsetFrom !== undefined) {
+    return specieIn.inheritsLearnsetFrom;
+  }
+  return undefined;
+}
+
+function outOfBattleForme(specieIn: any) {
+  let base = toID(specieIn.baseSpecies) as string /* TODO */;
+  const inheritsFrom = inheritsLearnsetFrom(specieIn);
+
+  if (inheritsFrom !== undefined) {
+    base = inheritsFrom;
+  }
+
+  return base;
+}
+
 const TRANSFORMS = {
   species(dexIn: PSDexGen, specieIn: any): Dex.Species<'Plain', PSExt> {
     const psid = toID(specieIn.species);
@@ -614,14 +638,14 @@ const TRANSFORMS = {
       for (const otherForme of specieIn.otherFormes ?? []) {
         // PS mixes in-battle & out-of-battle formes, untangle
         const forme = dexIn.species[otherForme];
-        if (forme !== undefined && isBattleOnly(forme)) {
+        if (forme !== undefined && isBattleOnly(forme) && outOfBattleForme(forme) === psid) {
           specieOut.altBattleFormes.push(forme[idSym]);
         }
       }
     } else {
       // This only handles the case where an inBattle forme has one associated
       // out of battle forme. Anything else must be hardcoded.
-      specieOut.altBattleFormes.push(dexIn.species[toID(specieIn.baseSpecies)][idSym]);
+      specieOut.altBattleFormes.push(dexIn.species[outOfBattleForme(specieIn)][idSym]);
     }
 
     for (const evoId of specieIn.evos ?? []) {
@@ -680,14 +704,13 @@ const TRANSFORMS = {
 
       if (curSpecieIn.prevo) {
         curSpecieIn = dexIn.species[curSpecieIn.prevo];
-      } else if (
-        /* logic copied from team-validator.ts, TODO test cases that exercise this logic */
-        curSpecieIn.baseSpecies !== curSpecieIn.species &&
-        (['Rotom', 'Necrozma'].includes(curSpecieIn.baseSpecies) || curSpecieIn.forme === 'Gmax')
-      ) {
-        curSpecieIn = dexIn.species[toID(curSpecieIn.baseSpecies)];
       } else {
-        break;
+        const inheritsFrom = inheritsLearnsetFrom(curSpecieIn);
+        if (inheritsFrom !== undefined) {
+          curSpecieIn = dexIn.species[curSpecieIn.inheritsFrom];
+        } else {
+          break;
+        }
       }
 
       // This can happen if prevo/baseSpecies added in later gen
