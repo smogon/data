@@ -132,6 +132,21 @@ describe('ps-import', () => {
     );
   });
 
+  test('forme learnsets', () => {
+    expect(
+      getGen(7)
+        .species.find1(x => x.name === 'Necrozma-Dawn-Wings')
+        .learnset.map(x => x.what.name)
+        .includes('Photon Geyser')
+    ).toBe(true);
+    expect(
+      getGen(7)
+        .species.find1(x => x.name === 'Rotom-Wash')
+        .learnset.map(x => x.what.name)
+        .includes('Thunderbolt')
+    ).toBe(true);
+  });
+
   test('JSON roundtrippable', () => {
     // TODO: compare top-level too
     for (const gen of Object.values(data.gens)) {

@@ -707,7 +707,7 @@ const TRANSFORMS = {
       } else {
         const inheritsFrom = inheritsLearnsetFrom(curSpecieIn);
         if (inheritsFrom !== undefined) {
-          curSpecieIn = dexIn.species[curSpecieIn.inheritsFrom];
+          curSpecieIn = dexIn.species[inheritsFrom];
         } else {
           break;
         }
