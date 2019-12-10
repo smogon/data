@@ -567,25 +567,25 @@ function rename(num: GenerationNumber, newName: string): string {
   return oldName;
 }
 
-function inheritsLearnsetFrom(specieIn: {
+function inheritsFrom(specieIn: {
   baseSpecies: string;
   forme?: string;
-  inheritsLearnsetFrom?: string;
+  inheritsFrom?: string;
 }): string | undefined {
   if (specieIn.forme === 'Gmax') {
     return toID(specieIn.baseSpecies) as string /* TODO */;
-  } else if (specieIn.inheritsLearnsetFrom !== undefined) {
-    return specieIn.inheritsLearnsetFrom;
+  } else if (specieIn.inheritsFrom !== undefined) {
+    return specieIn.inheritsFrom;
   }
   return undefined;
 }
 
 function outOfBattleForme(specieIn: any) {
   let base = toID(specieIn.baseSpecies) as string /* TODO */;
-  const inheritsFrom = inheritsLearnsetFrom(specieIn);
+  const inhF = inheritsFrom(specieIn);
 
-  if (inheritsFrom !== undefined) {
-    base = inheritsFrom;
+  if (inhF !== undefined) {
+    base = inhF;
   }
 
   return base;
@@ -705,9 +705,9 @@ const TRANSFORMS = {
       if (curSpecieIn.prevo) {
         curSpecieIn = dexIn.species[curSpecieIn.prevo];
       } else {
-        const inheritsFrom = inheritsLearnsetFrom(curSpecieIn);
-        if (inheritsFrom !== undefined) {
-          curSpecieIn = dexIn.species[inheritsFrom];
+        const inhF = inheritsFrom(curSpecieIn);
+        if (inhF !== undefined) {
+          curSpecieIn = dexIn.species[inhF];
         } else {
           break;
         }
