@@ -254,5 +254,11 @@ describe('ps-import', () => {
     expect(
       gen3.species.find1(x => x.name === 'Latias').learnset.find(x => x.what.name === 'Trick')
     ).toBeUndefined();
+
+    expect(
+      getGen(8)
+        .species.find1(x => x.name === 'Bisharp')
+        .learnset.find(x => x.what.name === 'Knock Off')
+    ).toBeUndefined();
   });
 });

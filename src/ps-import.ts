@@ -690,6 +690,16 @@ const TRANSFORMS = {
           const howFiltered = [];
           for (const way of how as Dex.MoveSource[]) {
             const learnedGen = +way.charAt(0);
+            // Gen 8 can't trade with other gens
+            //
+            // team-validator::allSources() doesn't let stuff trade before gen
+            // 3, but the data files have an explicit learnset mod in 2, not
+            // sure if this test is needed.
+            if (dexIn.num === 8 && learnedGen !== 8) {
+              continue;
+            }
+
+            // No tradebacks.
             if (learnedGen > dexIn.num) {
               continue;
             }
