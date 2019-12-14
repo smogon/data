@@ -570,25 +570,29 @@ function rename(num: GenerationNumber, newName: string): string {
 function inheritsFrom(specieIn: {
   baseSpecies: string;
   forme?: string;
-  inheritsFrom?: string;
-}): string | undefined {
+  inheritsFrom?: string | string[];
+}): string[] {
   if (specieIn.forme === 'Gmax') {
-    return toID(specieIn.baseSpecies) as string /* TODO */;
+    return [toID(specieIn.baseSpecies) as string] /* TODO */;
   } else if (specieIn.inheritsFrom !== undefined) {
-    return specieIn.inheritsFrom;
+    if (Array.isArray(specieIn.inheritsFrom)) {
+      return specieIn.inheritsFrom;
+    } else {
+      return [specieIn.inheritsFrom];
+    }
   }
-  return undefined;
+  return [];
 }
 
-function outOfBattleForme(specieIn: any) {
-  let base = toID(specieIn.baseSpecies) as string /* TODO */;
+function outOfBattleFormes(specieIn: any): string[] {
+  const base = toID(specieIn.baseSpecies) as string /* TODO */;
   const inhF = inheritsFrom(specieIn);
 
-  if (inhF !== undefined) {
-    base = inhF;
+  if (inhF.length === 0) {
+    return [base];
+  } else {
+    return inhF;
   }
-
-  return base;
 }
 
 const TRANSFORMS = {
@@ -638,14 +642,17 @@ const TRANSFORMS = {
       for (const otherForme of specieIn.otherFormes ?? []) {
         // PS mixes in-battle & out-of-battle formes, untangle
         const forme = dexIn.species[otherForme];
-        if (forme !== undefined && isBattleOnly(forme) && outOfBattleForme(forme) === psid) {
+        if (forme !== undefined && isBattleOnly(forme) && outOfBattleFormes(forme).includes(psid)) {
           specieOut.altBattleFormes.push(forme[idSym]);
         }
       }
     } else {
-      // This only handles the case where an inBattle forme has one associated
-      // out of battle forme. Anything else must be hardcoded.
-      specieOut.altBattleFormes.push(dexIn.species[outOfBattleForme(specieIn)][idSym]);
+      for (const oobId of outOfBattleFormes(specieIn)) {
+        const oob = dexIn.species[oobId];
+        if (oob !== undefined) {
+          specieOut.altBattleFormes.push(oob[idSym]);
+        }
+      }
     }
 
     for (const evoId of specieIn.evos ?? []) {
@@ -716,8 +723,9 @@ const TRANSFORMS = {
         curSpecieIn = dexIn.species[curSpecieIn.prevo];
       } else {
         const inhF = inheritsFrom(curSpecieIn);
-        if (inhF !== undefined) {
-          curSpecieIn = dexIn.species[inhF];
+        if (inhF.length > 0) {
+          // If in-battle only, then this is always a single entry.
+          curSpecieIn = dexIn.species[inhF[0]];
         } else {
           break;
         }
