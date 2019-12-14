@@ -198,6 +198,15 @@ describe('ps-import', () => {
 
   test('gen 8', () => {});
 
+  test('moveflags', () => {
+    expect(getGen(6).moves.find1(x => x.name === 'Earthquake').flags.nonsky).toBe(true);
+    expect(getGen(6).moves.find1(x => x.name === 'Earthquake').flags.punch).toBe(false);
+    expect(getGen(6).moves.find1(x => x.name === 'Earthquake').flags.protect).toBe(true);
+    expect(getGen(6).moves.find1(x => x.name === 'Whirlwind').flags.protect).toBe(false);
+    expect(getGen(6).moves.find1(x => x.name === 'Mirror Move').flags.mirror).toBe(false);
+    expect(getGen(6).moves.find1(x => x.name === 'Earthquake').flags.mirror).toBe(true);
+  });
+
   // TODO: move to a diff file?
   test('nice display', () => {
     expect(

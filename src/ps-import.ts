@@ -500,6 +500,30 @@ export type MoveTarget =
   | 'FoeSide'
   | 'All';
 
+export type MoveFlags = {
+  authentic: boolean;
+  bite: boolean;
+  bullet: boolean;
+  charge: boolean;
+  contact: boolean;
+  dance: boolean;
+  defrost: boolean;
+  distance: boolean;
+  gravity: boolean;
+  heal: boolean;
+  mirror: boolean;
+  mystery: boolean;
+  nonsky: boolean;
+  powder: boolean;
+  protect: boolean;
+  pulse: boolean;
+  punch: boolean;
+  recharge: boolean;
+  reflectable: boolean;
+  snatch: boolean;
+  sound: boolean;
+};
+
 export type PSExt = {
   gens: {
     num: GenerationNumber;
@@ -539,6 +563,7 @@ export type PSExt = {
     } | null;
     isNonstandard: Nonstandard;
     target: MoveTarget;
+    flags: MoveFlags;
   };
   types: { name: string };
 };
@@ -798,6 +823,33 @@ const TRANSFORMS = {
     if (moveIn.type === '???') {
       moveIn.type = 'Normal';
     }
+
+    const f = moveIn.flags ?? {};
+
+    const flags = {
+      authentic: !!f.authentic,
+      bite: !!f.bite,
+      bullet: !!f.bullet,
+      charge: !!f.charge,
+      contact: !!f.contact,
+      dance: !!f.dance,
+      defrost: !!f.defrost,
+      distance: !!f.distance,
+      gravity: !!f.gravity,
+      heal: !!f.heal,
+      mirror: !!f.mirror,
+      mystery: !!f.mystery,
+      nonsky: !!f.nonsky,
+      powder: !!f.powder,
+      protect: !!f.protect,
+      pulse: !!f.pulse,
+      punch: !!f.punch,
+      recharge: !!f.recharge,
+      reflectable: !!f.reflectable,
+      snatch: !!f.snatch,
+      sound: !!f.sound,
+    };
+
     return {
       name: rename(dexIn.num, moveIn.name),
       type: dexIn.types[toID(moveIn.type)][idSym],
@@ -811,6 +863,7 @@ const TRANSFORMS = {
       zMove,
       isNonstandard: moveIn.isNonstandard ?? null,
       target: capitalize(moveIn.target) as MoveTarget,
+      flags,
     };
   },
   types(dexIn: PSDexGen, typeIn: any): Dex.Type<'Plain', PSExt> {
