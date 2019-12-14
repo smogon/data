@@ -146,7 +146,16 @@ describe('ps-import', () => {
   test('gen 8', () => {});
 
   test('hidden ability', () => {
-    expect(getGen(3).species.find1(x => x.name === 'Sharpedo').abilities.find(x => x.name === 'Speed Boost')).toBeUndefined()
+    expect(getGen(3).species.find1(x => x.name === 'Blaziken').abilities.find(x => x.name === 'Speed Boost')).toBeUndefined()
+  });
+
+  test('moveflags', () => {
+    expect(getGen(6).moves.find1(x => x.name === 'Earthquake').flags.nonsky).toBe(1);
+    expect(getGen(6).moves.find1(x => x.name === 'Earthquake').flags.punch).toBeUndefined();
+    expect(getGen(6).moves.find1(x => x.name === 'Earthquake').flags.protect).toBe(1);
+    expect(getGen(6).moves.find1(x => x.name === 'Whirlwind').flags.protect).toBeUndefined();
+    expect(getGen(6).moves.find1(x => x.name === 'Mirror Move').flags.mirror).toBeUndefined();
+    expect(getGen(6).moves.find1(x => x.name === 'Earthquake').flags.mirror).toBe(1);
   });
 
   // TODO: move to a diff file?
