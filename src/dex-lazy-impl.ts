@@ -344,12 +344,14 @@ class Species extends SpeciesBase {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class Ability extends GenerationalBase {
-  [k: string]: unknown;
-
+class AbilityBase extends GenerationalBase {
   get genFamily() {
     return makeGenFamily(this, 'abilities');
   }
+}
+
+class Ability extends AbilityBase {
+  [k: string]: unknown;
 
   constructor(gen: Generation, id: number, ability: Source) {
     super(gen, id);
@@ -359,12 +361,14 @@ class Ability extends GenerationalBase {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class Item extends GenerationalBase {
-  [k: string]: unknown;
-
+class ItemBase extends GenerationalBase {
   get genFamily() {
     return makeGenFamily(this, 'items');
   }
+}
+
+class Item extends ItemBase {
+  [k: string]: unknown;
 
   constructor(gen: Generation, id: number, item: Source) {
     super(gen, id);
@@ -401,12 +405,14 @@ class Move extends MoveBase {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class Type extends GenerationalBase {
-  [k: string]: unknown;
-
+class TypeBase extends GenerationalBase {
   get genFamily() {
     return makeGenFamily(this, 'types');
   }
+}
+
+class Type extends TypeBase {
+  [k: string]: unknown;
 
   constructor(gen: Generation, id: number, type: Source) {
     super(gen, id);
