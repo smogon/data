@@ -220,7 +220,11 @@ class Generation {
 }
 
 class GenerationalBase {
-  constructor(public gen: Generation, public __id: number /* TODO: symbol? */) {}
+  [k: string]: unknown;
+
+  constructor(public gen: Generation, public __id: number /* TODO: symbol? */, source: Source) {
+    source.assign(this, __id);
+  }
 
   toString() {
     if (Object.getOwnPropertyDescriptor(this, 'name') !== undefined) {
@@ -277,7 +281,7 @@ const typesSym = Symbol();
 const learnsetSym = Symbol();
 const altBattleFormesSym = Symbol();
 
-class SpeciesBase extends GenerationalBase {
+class Species extends GenerationalBase {
   private [prevoSym]: number | null | undefined;
   private [evosSym]: number[] | undefined;
   private [abilitiesSym]: number[] | undefined;
@@ -333,46 +337,19 @@ class SpeciesBase extends GenerationalBase {
   }
 }
 
-class Species extends SpeciesBase {
-  [k: string]: unknown;
-
-  constructor(gen: Generation, id: number, specie: Source) {
-    super(gen, id);
-    specie.assign(this, id);
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
-class AbilityBase extends GenerationalBase {
+class Ability extends GenerationalBase {
   get genFamily() {
     return makeGenFamily(this, 'abilities');
   }
 }
 
-class Ability extends AbilityBase {
-  [k: string]: unknown;
-
-  constructor(gen: Generation, id: number, ability: Source) {
-    super(gen, id);
-    ability.assign(this, id);
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
-class ItemBase extends GenerationalBase {
+class Item extends GenerationalBase {
   get genFamily() {
     return makeGenFamily(this, 'items');
-  }
-}
-
-class Item extends ItemBase {
-  [k: string]: unknown;
-
-  constructor(gen: Generation, id: number, item: Source) {
-    super(gen, id);
-    item.assign(this, id);
   }
 }
 
@@ -380,7 +357,7 @@ class Item extends ItemBase {
 
 const typeSym = Symbol();
 
-class MoveBase extends GenerationalBase {
+class Move extends GenerationalBase {
   private [typeSym]: number | undefined;
 
   get genFamily() {
@@ -394,28 +371,10 @@ class MoveBase extends GenerationalBase {
   }
 }
 
-class Move extends MoveBase {
-  [k: string]: unknown;
-
-  constructor(gen: Generation, id: number, move: Source) {
-    super(gen, id);
-    move.assign(this, id);
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
-class TypeBase extends GenerationalBase {
+class Type extends GenerationalBase {
   get genFamily() {
     return makeGenFamily(this, 'types');
-  }
-}
-
-class Type extends TypeBase {
-  [k: string]: unknown;
-
-  constructor(gen: Generation, id: number, type: Source) {
-    super(gen, id);
-    type.assign(this, id);
   }
 }
