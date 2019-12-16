@@ -328,7 +328,7 @@ class SpeciesBase extends GenerationalBase {
 
   get altBattleFormes() {
     const v = this[altBattleFormesSym];
-    if (v === undefined) throw new Error('learnset not loaded yet');
+    if (v === undefined) throw new Error('alt battle formes not loaded yet');
     return v.map(id => this.gen.species.resolve(id));
   }
 }
