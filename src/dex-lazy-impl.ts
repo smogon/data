@@ -219,11 +219,16 @@ class Generation {
   }
 }
 
+const idSym = Symbol();
+
 class GenerationalBase {
   [k: string]: unknown;
 
-  constructor(public gen: Generation, public __id: number /* TODO: symbol? */, source: Source) {
-    source.assign(this, __id);
+  [idSym]: number;
+
+  constructor(public gen: Generation, id: number, source: Source) {
+    this[idSym] = id;
+    source.assign(this, id);
   }
 
   toString() {
@@ -266,7 +271,7 @@ function makeGenFamily(go: GenerationalBase, k: string) {
   const arr = [];
   for (const gen of go.gen.dex.gens) {
     // TODO: datakind?
-    const obj = (gen[k] as any).get(go.__id);
+    const obj = (gen[k] as any).get(go[idSym]);
     if (obj !== undefined) arr.push(obj);
   }
   return new GenFamily(arr);
