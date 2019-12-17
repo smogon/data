@@ -851,7 +851,7 @@ const TRANSFORMS = {
     };
 
     let category;
-    if (dexIn.num <= 3) {
+    if (dexIn.num <= 3 && moveIn.category !== 'Status') {
       const specialTypes = [
         'Fire',
         'Water',

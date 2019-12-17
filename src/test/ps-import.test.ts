@@ -273,6 +273,8 @@ describe('ps-import', () => {
 
   test('Move categories', () => {
     expect(getGen(3).moves.find1(x => x.name === 'Ice Punch').category).toBe('Special');
+    expect(getGen(3).moves.find1(x => x.name === 'Toxic').category).toBe('Status');
     expect(getGen(4).moves.find1(x => x.name === 'Ice Punch').category).toBe('Physical');
+    expect(getGen(4).moves.find1(x => x.name === 'Toxic').category).toBe('Status');
   });
 });
