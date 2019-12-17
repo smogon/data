@@ -270,4 +270,9 @@ describe('ps-import', () => {
         .learnset.find(x => x.what.name === 'Knock Off')
     ).toBeUndefined();
   });
+
+  test('Move categories', () => {
+    expect(getGen(3).moves.find1(x => x.name === 'Ice Punch').category).toBe('Special');
+    expect(getGen(4).moves.find1(x => x.name === 'Ice Punch').category).toBe('Physical');
+  });
 });

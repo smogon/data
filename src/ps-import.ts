@@ -850,6 +850,23 @@ const TRANSFORMS = {
       sound: !!f.sound,
     };
 
+    let category;
+    if (dexIn.num <= 3) {
+      const specialTypes = [
+        'Fire',
+        'Water',
+        'Grass',
+        'Ice',
+        'Electric',
+        'Dark',
+        'Psychic',
+        'Dragon',
+      ];
+      category = specialTypes.includes(moveIn.type) ? 'Special' : 'Physical';
+    } else {
+      category = moveIn.category;
+    }
+
     return {
       name: rename(dexIn.num, moveIn.name),
       type: dexIn.types[toID(moveIn.type)][idSym],
@@ -859,7 +876,7 @@ const TRANSFORMS = {
       accuracy: moveIn.accuracy === true ? 'Bypass' : moveIn.accuracy,
       pp: moveIn.pp,
       priority: moveIn.priority,
-      category: moveIn.category,
+      category,
       zMove,
       isNonstandard: moveIn.isNonstandard ?? null,
       target: capitalize(moveIn.target) as MoveTarget,
