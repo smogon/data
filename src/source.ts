@@ -76,7 +76,7 @@ export class PrimSource implements Source {
 export class MultiSource implements Source {
   start: number;
   end: number;
-  sources: Source[];
+  private sources: Source[];
 
   constructor() {
     this.start = 1073741823; // 2**30-1, guaranteed to be an Smi in V8
