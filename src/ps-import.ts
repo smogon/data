@@ -167,16 +167,12 @@ function isMega(s: any) {
 
 const PREDS = {
   species(gen: GenerationNumber, s: any) {
-    // TODO Missingno, we don't have a "bird" type yet
-    if (s.isNonstandard === 'Glitch') {
-      return false;
-    }
-
     if (s.isNonstandard === 'LGPE' && gen !== 7) {
       return false;
     }
 
-    if (s.isNonstandard === 'Pokestar' && gen !== 5) {
+    // Missingno, Pokestar
+    if (s.isNonstandard === 'Custom' || s.isNonstandard === 'Unobtainable') {
       return false;
     }
 
@@ -481,7 +477,7 @@ function filterPSDex(dex: PSDexStage2) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type MoveCategory = 'Physical' | 'Special' | 'Status';
-export type Nonstandard = 'CAP' | 'LGPE' | 'Pokestar' | null;
+export type Nonstandard = 'CAP' | 'LGPE' | null;
 export type MoveTarget =
   // single-target
   | 'Normal'
