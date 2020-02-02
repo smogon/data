@@ -46,7 +46,7 @@ const TRANSFORMS = {
     return {
       description: item.desc,
       shortdescription: item.shortDesc,
-      cap: item.isNonstandard === 'CAP',
+      isNonstandard: item.isNonstandard === 'CAP' ? 'CAP' : 'Standard',
     };
   },
 
@@ -54,7 +54,7 @@ const TRANSFORMS = {
     return {
       description: ability.desc,
       shortdescription: ability.shortDesc,
-      cap: ability.isNonstandard === 'CAP',
+      isNonstandard: ability.isNonstandard === 'CAP' ? 'CAP' : 'Standard',
     };
   },
 
@@ -92,11 +92,12 @@ const TRANSFORMS = {
       tags,
     } as any;
 
+    specieOut.isNonstandard = specie.isNonstandard === 'CAP' ? 'CAP' : 'Standard';
+
     if (specie.isBattleOnly) {
       specieOut.pokemon = specie.altBattleFormes.map(getName);
     } else {
       specieOut.dexNumber = specie.num;
-      specieOut.cap = specie.isNonstandard === 'CAP';
       specieOut.egggroups = [];
       specieOut.evolvesFrom = specie.prevo === null ? null : getName(specie.prevo);
     }
@@ -117,7 +118,7 @@ const TRANSFORMS = {
       category: move.category === 'Status' ? 'Non-Damaging' : move.category,
       description: desc,
       shortdescription: move.shortDesc,
-      cap: move.isNonstandard === 'CAP',
+      isNonstandard: move.isNonstandard === 'CAP' ? 'CAP' : 'Standard',
       target: move.target,
       // Flags
     };
@@ -211,6 +212,7 @@ writeYaml('items.yaml', {
     'No Item': {
       introduction: 'gs',
       description: ['Placeholder used in movesets that do not use an item.'],
+      isNonstandard: ['Standard'],
     },
     ...exportGF(dex.items, 'items'),
   },
