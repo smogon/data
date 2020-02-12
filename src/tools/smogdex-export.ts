@@ -148,6 +148,18 @@ function exportGF(gfs: Iterable<GenFamily<any>>, k: string) {
     for (const obj of gf) {
       result.push({ gen: genInheritance[obj.gen.num - 1], data: (TRANSFORMS as any)[k](obj) });
     }
+
+    // NatDex hack
+    const gen7Obj = gf.find(({ gen: { num } }) => num === 7);
+    if (gen7Obj !== undefined && gf.find(({ gen: { num } }) => num === 8) === undefined) {
+      const data = (TRANSFORMS as any)[k](gen7Obj);
+      data.isNonstandard = 'NatDex';
+      if (k === 'species') {
+        data.tags = ['National Dex'];
+      }
+      result.push({ gen: 'ss', data });
+    }
+
     idk[getName(gf.latest)] = makeGenDiff(result);
   }
   return idk;
