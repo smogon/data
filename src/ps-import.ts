@@ -727,6 +727,33 @@ const TRANSFORMS = {
               continue;
             }
 
+            if (
+              dexIn.num >= 4 &&
+              learnedGen <= 3 &&
+              [
+                'cut',
+                'fly',
+                'surf',
+                'strength',
+                'flash',
+                'rocksmash',
+                'waterfall',
+                'dive',
+              ].includes(moveId)
+            ) {
+              continue;
+            }
+
+            if (
+              dexIn.num >= 5 &&
+              learnedGen <= 4 &&
+              ['cut', 'fly', 'surf', 'strength', 'rocksmash', 'waterfall', 'rockclimb'].includes(
+                moveId
+              )
+            ) {
+              continue;
+            }
+
             // No tradebacks.
             if (learnedGen > dexIn.num) {
               continue;
