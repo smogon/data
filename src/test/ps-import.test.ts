@@ -275,6 +275,12 @@ describe('ps-import', () => {
         .species.find1(x => x.name === 'Pichu')
         .learnset.find(x => x.what.name === 'Surf')
     ).toBeUndefined();
+
+    expect(
+      getGen(8)
+        .species.find1(x => x.name === 'Pichu')
+        .learnset.find(x => x.what.name === 'Surf')
+    ).toBeDefined();
   });
 
   test('Move categories', () => {
