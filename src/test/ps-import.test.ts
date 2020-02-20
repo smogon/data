@@ -289,4 +289,11 @@ describe('ps-import', () => {
     expect(getGen(4).moves.find1(x => x.name === 'Ice Punch').category).toBe('Physical');
     expect(getGen(4).moves.find1(x => x.name === 'Toxic').category).toBe('Status');
   });
+
+  test('Tiers', () => {
+    const darmanitanGalar = getGen(8).species.find1(x => x.name === 'Darmanitan-Galar');
+    expect(darmanitanGalar.tier).toBe(darmanitanGalar.altBattleFormes[0].tier);
+    const aegislash = getGen(8).species.find1(x => x.name === 'Aegislash');
+    expect(aegislash.tier).toBe(aegislash.altBattleFormes[0].tier);
+  });
 });

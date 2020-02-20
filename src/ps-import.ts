@@ -142,14 +142,6 @@ function inheritPSDex(dex: PSDexStage1): PSDexStage2 {
 
     mergeMap(dex[gen].species, dex[gen].learnsets);
     delete dex[gen].learnsets;
-
-    // Inherit data from base formes
-    for (const specie of Object.values(dex[gen].species)) {
-      if (specie.baseSpecies !== undefined) {
-        const baseSpecie = dex[gen].species[toID(specie.baseSpecies)];
-        Object.assign(specie, { ...baseSpecie, ...specie });
-      }
-    }
   }
 
   return dex;
@@ -593,26 +585,16 @@ function inheritsFrom(specieIn: {
   forme?: string;
   inheritsFrom?: string | string[];
 }): string[] {
-  if (specieIn.forme === 'Gmax') {
-    return [toID(specieIn.baseSpecies) as string] /* TODO */;
-  } else if (specieIn.inheritsFrom !== undefined) {
+  if (specieIn.inheritsFrom !== undefined) {
     if (Array.isArray(specieIn.inheritsFrom)) {
       return specieIn.inheritsFrom;
     } else {
       return [specieIn.inheritsFrom];
     }
-  }
-  return [];
-}
-
-function outOfBattleFormes(specieIn: any): string[] {
-  const base = toID(specieIn.baseSpecies) as string /* TODO */;
-  const inhF = inheritsFrom(specieIn);
-
-  if (inhF.length === 0) {
-    return [base];
+  } else if (specieIn.baseSpecies !== undefined) {
+    return [toID(specieIn.baseSpecies) as string]; /*TODO */
   } else {
-    return inhF;
+    return [];
   }
 }
 
@@ -632,7 +614,7 @@ const TRANSFORMS = {
       isNonstandard: specieIn.isNonstandard ?? null,
       isBattleOnly: isBattleOnly(specieIn),
       altBattleFormes: [],
-      tier: specieIn.tier,
+      tier: undefined as any, // Filled in by inheritance loop
       heightm: specieIn.heightm,
       weightkg: specieIn.weightkg,
       // Can be undefined
@@ -662,12 +644,12 @@ const TRANSFORMS = {
     } else if (!isBattleOnly(specieIn)) {
       // Could search otherFormes here; treat inheritsFrom as the single source of truth
       for (const forme of Object.values(dexIn.species)) {
-        if (isBattleOnly(forme) && outOfBattleFormes(forme).includes(psid)) {
+        if (isBattleOnly(forme) && inheritsFrom(forme).includes(psid)) {
           specieOut.altBattleFormes.push(forme[idSym]);
         }
       }
     } else {
-      for (const oobId of outOfBattleFormes(specieIn)) {
+      for (const oobId of inheritsFrom(specieIn)) {
         const oob = dexIn.species[oobId];
         if (oob !== undefined) {
           specieOut.altBattleFormes.push(oob[idSym]);
@@ -703,6 +685,10 @@ const TRANSFORMS = {
 
     let curSpecieIn = specieIn;
     while (true) {
+      if (specieOut.tier === undefined) {
+        specieOut.tier = curSpecieIn.tier;
+      }
+
       for (const [moveId, how] of Object.entries(
         curSpecieIn.learnset ?? [] /* Pokestars have a missing learnset */
       )) {
@@ -766,16 +752,16 @@ const TRANSFORMS = {
         }
       }
 
-      if (curSpecieIn.prevo) {
+      // Sometimes inBattle formes have prevo set which doesn't make sense, be
+      // sure to check prevo first. TODO don't set prevo on such cases either
+      const inhF = inheritsFrom(curSpecieIn);
+      if (inhF.length > 0) {
+        // If in-battle only, then this is always a single entry.
+        curSpecieIn = dexIn.species[inhF[0]];
+      } else if (curSpecieIn.prevo) {
         curSpecieIn = dexIn.species[curSpecieIn.prevo];
       } else {
-        const inhF = inheritsFrom(curSpecieIn);
-        if (inhF.length > 0) {
-          // If in-battle only, then this is always a single entry.
-          curSpecieIn = dexIn.species[inhF[0]];
-        } else {
-          break;
-        }
+        break;
       }
 
       // This can happen if prevo/baseSpecies added in later gen
