@@ -173,9 +173,7 @@ function exportLearnsets(gen: Generation<'Rich', PSExt>) {
   for (const specie of gen.species) {
     if (specie.isBattleOnly) continue;
     learnsets[getName(specie)] = {
-      moves: Array.from(
-        new Set(specie.learnset.map(({ what }) => getName(what)).filter(x => x !== 'Hidden Power'))
-      ),
+      moves: Array.from(new Set(specie.learnset.map(({ what }) => getName(what)))),
     };
   }
 
@@ -232,11 +230,9 @@ writeYaml('items.yaml', {
   },
 });
 
-const moves = Array.from(dex.moves).filter(x => x.latest.name !== 'Hidden Power');
-
 writeYaml('moves.yaml', {
   genInheritance,
-  moves: exportGF(moves, 'moves'),
+  moves: exportGF(dex.moves, 'moves'),
 });
 
 writeYaml('abilities.yaml', {

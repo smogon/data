@@ -239,6 +239,11 @@ describe('ps-import', () => {
     ).toBeDefined();
   });
 
+  test('Hidden Power', () => {
+    expect(getGen(7).moves.find(x => x.name === 'Hidden Power')).toBeDefined();
+    expect(getGen(7).moves.find(x => x.name === 'Hidden Power Fire')).toBeUndefined();
+  });
+
   test('Learnset', () => {
     const gen3 = getGen(3);
     expect(

@@ -260,6 +260,10 @@ const PREDS = {
       return false;
     }
 
+    if (m.id === 'hiddenpower' && m.name !== 'Hidden Power') {
+      return false;
+    }
+
     switch (gen) {
       case 8:
         return true;
