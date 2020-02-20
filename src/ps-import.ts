@@ -660,10 +660,9 @@ const TRANSFORMS = {
           throw new Error(`Unknown Necrozma ${specieIn.species}`);
       }
     } else if (!isBattleOnly(specieIn)) {
-      for (const otherForme of specieIn.otherFormes ?? []) {
-        // PS mixes in-battle & out-of-battle formes, untangle
-        const forme = dexIn.species[otherForme];
-        if (forme !== undefined && isBattleOnly(forme) && outOfBattleFormes(forme).includes(psid)) {
+      // Could search otherFormes here; treat inheritsFrom as the single source of truth
+      for (const forme of Object.values(dexIn.species)) {
+        if (isBattleOnly(forme) && outOfBattleFormes(forme).includes(psid)) {
           specieOut.altBattleFormes.push(forme[idSym]);
         }
       }
