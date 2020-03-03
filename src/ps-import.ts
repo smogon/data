@@ -260,6 +260,7 @@ const PREDS = {
       return false;
     }
 
+    // PS has fake moves like "Hidden Power Fire". These all have id 'hiddenpower'.
     if (m.id === 'hiddenpower' && m.name !== 'Hidden Power') {
       return false;
     }
@@ -286,6 +287,7 @@ const PREDS = {
 
   types(gen: GenerationNumber, t: any) {
     if (gen < 8) {
+      // Remove types that don't exist in prev gens like Steel/Dark in Gen 1
       return t !== null;
     } else {
       return true;
@@ -345,8 +347,11 @@ const renames: Map<string, Array<{ gen: GenerationNumber; name: string }>> = new
   ['Twisted Spoon', [{ gen: 5, name: 'TwistedSpoon' }]],
   ['X Defense', [{ gen: 5, name: 'X Defend' }]],
   ['X Sp. Atk', [{ gen: 5, name: 'X Special' }]],
+  // TODO: add leek
 ]);
 
+// PS doesn't always have enough information to figure out what generation something is in.
+// TODO: move to diff file?
 const idGens = new Map([
   // Species
   ['volkritter', [5, 6, 7, 8]],
@@ -419,6 +424,8 @@ const idGens = new Map([
   ['crucibellite', [6, 7]],
 ]);
 
+// Every object that survives the filter is assigned a number to this symbol to
+// identify it. This number is the same across generations.
 const idSym = Symbol();
 
 function filterPSDex(dex: PSDexStage2) {
@@ -568,6 +575,8 @@ function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+// Items that only exist in past generations redundantly indicate this fact in
+// their descriptions. Strip out the redundancy.
 function fixDesc(s: string) {
   return s.replace(/^\(Gen \w\) /, '');
 }
@@ -629,6 +638,7 @@ const TRANSFORMS = {
       dexIn.num === 7 /* Necrozma-Ultra doesn't exist in Gen 8, no altBattleFormes */ &&
       specieIn.species.startsWith('Necrozma')
     ) {
+      // This Pokemon has an incorrect inheritsFrom attribute...
       switch (specieIn.species) {
         case 'Necrozma':
           break;
