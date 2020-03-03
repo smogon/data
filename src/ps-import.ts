@@ -151,7 +151,7 @@ function inheritPSDex(dex: PSDexStage1): PSDexStage2 {
 // Filtering
 ////////////////////////////////////////////////////////////////////////////////
 
-// Limits from sim/dex-data.ts}
+// Limits from sim/dex-data.ts
 
 function isMega(s: any) {
   return ['Mega', 'Mega-X', 'Mega-Y', 'Primal', 'Gmax'].includes(s.forme);
