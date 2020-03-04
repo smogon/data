@@ -5,10 +5,7 @@
   "types": "build/index.d.ts",
   "description": "Core functionality required for building Pokémon applications (fundamental data and logic)",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/smogon/data.git"
-  },
+  "repository": "github:smogon/data",
   "contributors": [
     "Christopher Monsanto <chaos@smogon.com>",
     "Guangcong Luo <zarel@smogon.com>",
