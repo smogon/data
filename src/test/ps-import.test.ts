@@ -3,7 +3,7 @@ import path from 'path';
 import { loader } from '../index';
 
 describe('ps-import', () => {
-  const data = psImport(path.join(__dirname, '../../vendor/Pokemon-Showdown/data'));
+  const data = psImport(path.join(__dirname, '../../vendor/pokemon-showdown/data'));
   const dex = loader.load(data).construct();
 
   function getGen(n: number) {

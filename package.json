@@ -40,9 +40,9 @@
     "fullbuild": "npm run compile && npm run lint",
     "fulltest": "npm run fullbuild && npm run test",
     "preimport": "npm run compile",
-    "import": "node build/tools/convert-ps-data.js vendor/Pokemon-Showdown/data build/data",
+    "import": "node build/tools/convert-ps-data.js vendor/pokemon-showdown/data build/data",
     "presmogdex-export": "npm run compile",
-    "smogdex-export": "node build/tools/smogdex-export.js vendor/Pokemon-Showdown/data build/smogdex-export",
-    "ps-sync": "git -C vendor/Pokemon-Showdown pull && npm run test && git commit -m 'Update PS dependency' vendor/Pokemon-Showdown"
+    "smogdex-export": "node build/tools/smogdex-export.js vendor/pokemon-showdown/data build/smogdex-export",
+    "ps-sync": "git -C vendor/pokemon-showdown pull && npm run test && git commit -m 'Update PS dependency' vendor/pokemon-showdown"
   }
 }
