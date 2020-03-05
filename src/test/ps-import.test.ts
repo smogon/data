@@ -286,6 +286,18 @@ describe('ps-import', () => {
         .species.find1(x => x.name === 'Pichu')
         .learnset.find(x => x.what.name === 'Surf')
     ).toBeDefined();
+
+    expect(
+      getGen(8)
+        .species.find1(x => x.name === 'Linoone')
+        .learnset.find(x => x.what.name === 'Belly Drum')
+    ).toBeDefined();
+
+    expect(
+      getGen(8)
+        .species.find1(x => x.name === 'Linoone-Galar')
+        .learnset.find(x => x.what.name === 'Belly Drum')
+    ).toBeUndefined();
   });
 
   test('Move categories', () => {

@@ -604,11 +604,37 @@ function inheritsFrom(specieIn: {
     } else {
       return [specieIn.inheritsFrom];
     }
-  } else if (specieIn.baseSpecies !== undefined) {
-    return [toID(specieIn.baseSpecies) as string]; /*TODO */
-  } else {
-    return [];
   }
+  return [];
+}
+
+function outOfBattleFormes(specieIn: any): string[] {
+  const base = toID(specieIn.baseSpecies) as string /* TODO */;
+  const inhF = inheritsFrom(specieIn);
+
+  if (inhF.length === 0) {
+    return [base];
+  } else {
+    return inhF;
+  }
+}
+
+function getTier(dexIn: PSDexGen, specieIn: any): string {
+  if (specieIn.tier !== undefined) {
+    return specieIn.tier;
+  }
+  for (const psid of inheritsFrom(specieIn)) {
+    const tier = dexIn.species[psid]?.tier;
+    if (tier !== undefined) {
+      return tier;
+    }
+  }
+
+  const tier = dexIn.species[toID(specieIn.baseSpecies)]?.tier;
+  if (tier === undefined) {
+    throw new Error(`Can't figure out tier for ${specieIn.species} in Gen ${dexIn.num}`);
+  }
+  return tier;
 }
 
 const TRANSFORMS = {
@@ -627,7 +653,7 @@ const TRANSFORMS = {
       isNonstandard: specieIn.isNonstandard ?? null,
       isBattleOnly: isBattleOnly(specieIn),
       altBattleFormes: [],
-      tier: undefined as any, // Filled in by inheritance loop
+      tier: getTier(dexIn, specieIn),
       heightm: specieIn.heightm,
       weightkg: specieIn.weightkg,
       // Can be undefined
@@ -658,12 +684,12 @@ const TRANSFORMS = {
     } else if (!isBattleOnly(specieIn)) {
       // Could search otherFormes here; treat inheritsFrom as the single source of truth
       for (const forme of Object.values(dexIn.species)) {
-        if (isBattleOnly(forme) && inheritsFrom(forme).includes(psid)) {
+        if (isBattleOnly(forme) && outOfBattleFormes(forme).includes(psid)) {
           specieOut.altBattleFormes.push(forme[idSym]);
         }
       }
     } else {
-      for (const oobId of inheritsFrom(specieIn)) {
+      for (const oobId of outOfBattleFormes(specieIn)) {
         const oob = dexIn.species[oobId];
         if (oob !== undefined) {
           specieOut.altBattleFormes.push(oob[idSym]);
@@ -699,10 +725,6 @@ const TRANSFORMS = {
 
     let curSpecieIn = specieIn;
     while (true) {
-      if (specieOut.tier === undefined) {
-        specieOut.tier = curSpecieIn.tier;
-      }
-
       for (const [moveId, how] of Object.entries(
         curSpecieIn.learnset ?? [] /* Pokestars have a missing learnset */
       )) {
@@ -766,16 +788,18 @@ const TRANSFORMS = {
         }
       }
 
-      // Sometimes inBattle formes have prevo set which doesn't make sense, be
-      // sure to check prevo first. TODO don't set prevo on such cases either
-      const inhF = inheritsFrom(curSpecieIn);
-      if (inhF.length > 0) {
-        // If in-battle only, then this is always a single entry.
-        curSpecieIn = dexIn.species[inhF[0]];
-      } else if (curSpecieIn.prevo) {
+      // NOTE: we cannot inherit from baseSpecies, this would mean for example
+      // that Zigzagoon-Galar inherits learnset from Zigzagoon
+      if (curSpecieIn.prevo) {
         curSpecieIn = dexIn.species[curSpecieIn.prevo];
       } else {
-        break;
+        const inhF = inheritsFrom(curSpecieIn);
+        if (inhF.length > 0) {
+          // If in-battle only, then this is always a single entry.
+          curSpecieIn = dexIn.species[inhF[0]];
+        } else {
+          break;
+        }
       }
 
       // This can happen if prevo/baseSpecies added in later gen
