@@ -593,40 +593,39 @@ function rename(num: GenerationNumber, newName: string): string {
   return oldName;
 }
 
-function inheritsFrom(specieIn: {
-  baseSpecies: string;
-  forme?: string;
-  inheritsFrom?: string | string[];
-}): string[] {
-  if (specieIn.inheritsFrom !== undefined) {
-    if (Array.isArray(specieIn.inheritsFrom)) {
-      return specieIn.inheritsFrom;
-    } else {
-      return [specieIn.inheritsFrom];
-    }
-  }
-  return [];
-}
-
+// Only well-defined if guarded by isBattleOnly
 function outOfBattleFormes(specieIn: any): string[] {
-  const base = toID(specieIn.baseSpecies) as string /* TODO */;
-  const inhF = inheritsFrom(specieIn);
+  let oob = [];
+  const bo = specieIn.battleOnly;
 
-  if (inhF.length === 0) {
-    return [base];
+  if (isMega(specieIn)) {
+    oob = [specieIn.baseSpecies];
+  } else if (bo === undefined) {
+    oob = [];
+  } else if (Array.isArray(bo)) {
+    oob = bo;
   } else {
-    return inhF;
+    oob = [bo];
   }
+
+  if (oob.length === 0) {
+    throw new Error(`${specieIn.species} has no out-of-battle formes`);
+  }
+
+  return oob.map(toID);
 }
 
 function getTier(dexIn: PSDexGen, specieIn: any): string {
   if (specieIn.tier !== undefined) {
     return specieIn.tier;
   }
-  for (const psid of inheritsFrom(specieIn)) {
-    const tier = dexIn.species[psid]?.tier;
-    if (tier !== undefined) {
-      return tier;
+
+  if (isBattleOnly(specieIn)) {
+    for (const psid of outOfBattleFormes(specieIn)) {
+      const tier = dexIn.species[psid]?.tier;
+      if (tier !== undefined) {
+        return tier;
+      }
     }
   }
 
@@ -634,6 +633,7 @@ function getTier(dexIn: PSDexGen, specieIn: any): string {
   if (tier === undefined) {
     throw new Error(`Can't figure out tier for ${specieIn.species} in Gen ${dexIn.num}`);
   }
+
   return tier;
 }
 
@@ -660,28 +660,7 @@ const TRANSFORMS = {
       // doublesTier: specieIn.doublesTier
     };
 
-    if (
-      dexIn.num === 7 /* Necrozma-Ultra doesn't exist in Gen 8, no altBattleFormes */ &&
-      specieIn.species.startsWith('Necrozma')
-    ) {
-      // This Pokemon has an incorrect inheritsFrom attribute...
-      switch (specieIn.species) {
-        case 'Necrozma':
-          break;
-        case 'Necrozma-Dusk-Mane':
-          specieOut.altBattleFormes.push(dexIn.species['necrozmaultra'][idSym]);
-          break;
-        case 'Necrozma-Dawn-Wings':
-          specieOut.altBattleFormes.push(dexIn.species['necrozmaultra'][idSym]);
-          break;
-        case 'Necrozma-Ultra':
-          specieOut.altBattleFormes.push(dexIn.species['necrozmaduskmane'][idSym]);
-          specieOut.altBattleFormes.push(dexIn.species['necrozmadawnwings'][idSym]);
-          break;
-        default:
-          throw new Error(`Unknown Necrozma ${specieIn.species}`);
-      }
-    } else if (!isBattleOnly(specieIn)) {
+    if (!isBattleOnly(specieIn)) {
       // Could search otherFormes here; treat inheritsFrom as the single source of truth
       for (const forme of Object.values(dexIn.species)) {
         if (isBattleOnly(forme) && outOfBattleFormes(forme).includes(psid)) {
@@ -792,14 +771,10 @@ const TRANSFORMS = {
       // that Zigzagoon-Galar inherits learnset from Zigzagoon
       if (curSpecieIn.prevo) {
         curSpecieIn = dexIn.species[curSpecieIn.prevo];
+      } else if (curSpecieIn.inheritsFrom) {
+        curSpecieIn = dexIn.species[curSpecieIn.inheritsFrom];
       } else {
-        const inhF = inheritsFrom(curSpecieIn);
-        if (inhF.length > 0) {
-          // If in-battle only, then this is always a single entry.
-          curSpecieIn = dexIn.species[inhF[0]];
-        } else {
-          break;
-        }
+        break;
       }
 
       // This can happen if prevo/baseSpecies added in later gen
