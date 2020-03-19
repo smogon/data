@@ -13,18 +13,18 @@
     "Mathieu Dias-Martins <marty@smogon.com>"
   ],
   "dependencies": {
-    "@types/node": "^12.11.5"
+    "@types/node": "^12.12.30"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.19",
-    "@types/js-yaml": "^3.12.1",
-    "gts": "^1.1.0",
+    "@types/jest": "^24.9.1",
+    "@types/js-yaml": "^3.12.2",
+    "gts": "^1.1.2",
     "jest": "^24.9.0",
     "js-yaml": "^3.13.1",
     "json-stringify-deterministic": "^1.0.1",
     "source-map-support": "^0.5.13",
-    "ts-jest": "^24.1.0",
-    "typescript": "^3.7.2"
+    "ts-jest": "^24.3.0",
+    "typescript": "^3.8.3"
   },
   "scripts": {
     "lint": "gts check",
