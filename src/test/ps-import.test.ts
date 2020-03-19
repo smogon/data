@@ -313,4 +313,8 @@ describe('ps-import', () => {
     const aegislash = getGen(8).species.find1(x => x.name === 'Aegislash');
     expect(aegislash.tier).toBe(aegislash.altBattleFormes[0].tier);
   });
+
+  test('genesect', () => {
+    expect(dex.species.find(x => x.latest.name === 'Genesect-Douse')).toBeDefined();
+  });
 });
