@@ -66,6 +66,12 @@ const TRANSFORMS = {
       } else {
         tags.push('PU');
       }
+    } else if (specie.tier === '(NU)') {
+      if (specie.gen.num === 5) {
+        tags.push('Untiered');
+      } else {
+        throw new Error(`(NU) outside gen 5, bailing`);
+      }
     } else if (specie.tier === '(OU)') {
       tags.push('OU');
     } else if (specie.tier === '(Uber)') {
