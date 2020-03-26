@@ -79,8 +79,6 @@ const TRANSFORMS = {
     } else if (['Unreleased', 'New'].includes(specie.tier)) {
       tags.push('Limbo');
     } else if (['CAP NFE', 'CAP Uber', 'LC Uber', 'Illegal', 'CAP LC'].includes(specie.tier)) {
-    } else if (specie.tier !== 'NFE') {
-      tags.push(specie.tier);
     }
 
     const specieOut = {
