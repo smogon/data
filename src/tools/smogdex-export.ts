@@ -61,7 +61,7 @@ const TRANSFORMS = {
   species(specie: Species<'Rich', PSExt>) {
     const tags = [];
     if (specie.tier === '(PU)') {
-      if (specie.gen.num >= 7) {
+      if (specie.gen.num >= 6) {
         tags.push('Untiered');
       } else {
         tags.push('PU');
