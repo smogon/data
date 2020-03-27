@@ -169,7 +169,7 @@ const PREDS = {
     }
 
     if (s.isNonstandard === 'CAP') {
-      throw new Error(`Missing CAP from supplemental gens list: ${s.species}`);
+      throw new Error(`Missing CAP from supplemental gens list: ${s.name}`);
     }
 
     if (isMega(s) && gen < 6) {
@@ -184,7 +184,7 @@ const PREDS = {
       return false;
     }
 
-    if (s.forme !== undefined && (s.species.includes('-Galar') || s.forme === 'Gmax') && gen < 8) {
+    if (s.forme !== undefined && (s.name.includes('-Galar') || s.forme === 'Gmax') && gen < 8) {
       return false;
     }
 
@@ -609,7 +609,7 @@ function outOfBattleFormes(specieIn: any): string[] {
   }
 
   if (oob.length === 0) {
-    throw new Error(`${specieIn.species} has no out-of-battle formes`);
+    throw new Error(`${specieIn.name} has no out-of-battle formes`);
   }
 
   return oob.map(toID);
@@ -631,7 +631,7 @@ function getTier(dexIn: PSDexGen, specieIn: any): string {
 
   const tier = dexIn.species[toID(specieIn.baseSpecies)]?.tier;
   if (tier === undefined) {
-    throw new Error(`Can't figure out tier for ${specieIn.species} in Gen ${dexIn.num}`);
+    throw new Error(`Can't figure out tier for ${specieIn.name} in Gen ${dexIn.num}`);
   }
 
   return tier;
@@ -639,11 +639,11 @@ function getTier(dexIn: PSDexGen, specieIn: any): string {
 
 const TRANSFORMS = {
   species(dexIn: PSDexGen, specieIn: any): Dex.Species<'Plain', PSExt> {
-    const psid = toID(specieIn.species);
+    const psid = toID(specieIn.name);
 
     const specieOut: Dex.Species<'Plain', PSExt> = {
       num: specieIn.num,
-      name: rename(dexIn.num, specieIn.species),
+      name: rename(dexIn.num, specieIn.name),
       prevo: dexIn.species[specieIn.prevo ?? '']?.[idSym] ?? null,
       evos: [],
       abilities: [],
