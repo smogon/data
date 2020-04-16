@@ -273,7 +273,7 @@ describe('ps-import', () => {
       getGen(8)
         .species.find1(x => x.name === 'Bisharp')
         .learnset.find(x => x.what.name === 'Knock Off')
-    ).toBeUndefined();
+    ).toBeDefined();
 
     expect(
       getGen(7)
