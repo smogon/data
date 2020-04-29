@@ -644,7 +644,7 @@ const TRANSFORMS = {
     const specieOut: Dex.Species<'Plain', PSExt> = {
       num: specieIn.num,
       name: rename(dexIn.num, specieIn.name),
-      prevo: dexIn.species[specieIn.prevo ?? '']?.[idSym] ?? null,
+      prevo: dexIn.species[toID(specieIn.prevo ?? '')]?.[idSym] ?? null,
       evos: [],
       abilities: [],
       types: [],
@@ -677,7 +677,7 @@ const TRANSFORMS = {
     }
 
     for (const evoId of specieIn.evos ?? []) {
-      const evo = dexIn.species[evoId];
+      const evo = dexIn.species[toID(evoId)];
       if (evo !== undefined) {
         specieOut.evos.push(evo[idSym]);
       }
@@ -764,9 +764,9 @@ const TRANSFORMS = {
       // NOTE: we cannot inherit from baseSpecies, this would mean for example
       // that Zigzagoon-Galar inherits learnset from Zigzagoon
       if (curSpecieIn.prevo) {
-        curSpecieIn = dexIn.species[curSpecieIn.prevo];
-      } else if (curSpecieIn.inheritsFrom) {
-        curSpecieIn = dexIn.species[curSpecieIn.inheritsFrom];
+        curSpecieIn = dexIn.species[toID(curSpecieIn.prevo)];
+      } else if (curSpecieIn.changesFrom) {
+        curSpecieIn = dexIn.species[toID(curSpecieIn.changesFrom)];
       } else {
         break;
       }
