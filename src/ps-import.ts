@@ -261,7 +261,7 @@ const PREDS = {
     }
 
     // PS has fake moves like "Hidden Power Fire". These all have id 'hiddenpower'.
-    if (m.id === 'hiddenpower' && m.name !== 'Hidden Power') {
+    if (m.realMove === 'Hidden Power' && m.name !== 'Hidden Power') {
       return false;
     }
 
