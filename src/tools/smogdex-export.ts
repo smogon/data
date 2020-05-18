@@ -26,6 +26,7 @@ function getIntroduction(genFamily: GenFamily<{ gen: { num: number } }>) {
 // Need to use latest names, not gen-accurate names
 function getName(obj: { genFamily: { latest: { name: string } } }) {
   let name = obj.genFamily.latest.name;
+  name = name.replace(/\u2019/g, "'"); // Farfetch'd ...
   if (name === 'Necrozma-Dawn-Wings') {
     name = 'Necrozma-Dawn Wings';
   } else if (name === 'Necrozma-Dusk-Mane') {
