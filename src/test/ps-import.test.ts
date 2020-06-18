@@ -155,22 +155,23 @@ describe('ps-import', () => {
   });
 
   test('Genfamilies', () => {
+    const gen8 = getGen(8);
     const gen7 = getGen(7);
     const gen1 = getGen(1);
-    const alakazam7 = gen7.species.find1(x => x.name === 'Alakazam');
+    const alakazam8 = gen8.species.find1(x => x.name === 'Alakazam');
     const alakazam1 = gen1.species.find1(x => x.name === 'Alakazam');
 
     // Huge output on failing test...
     expect(Object.is(alakazam1.genFamily.earliest, alakazam1)).toBe(true);
-    expect(Object.is(alakazam1.genFamily.latest, alakazam7)).toBe(true);
+    expect(Object.is(alakazam1.genFamily.latest, alakazam8)).toBe(true);
 
     const gf1arr = Array.from(alakazam1.genFamily);
-    const gf7arr = Array.from(alakazam7.genFamily);
-    expect(gf1arr.length).toBe(7);
+    const gf8arr = Array.from(alakazam8.genFamily);
+    expect(gf1arr.length).toBe(8);
 
     // Huge output on failing test...
-    for (let i = 0; i < 7; i++) {
-      expect(Object.is(gf1arr[i], gf7arr[i])).toBe(true);
+    for (let i = 0; i < 8; i++) {
+      expect(Object.is(gf1arr[i], gf8arr[i])).toBe(true);
     }
 
     const megaMetagross = gen7.species.find1(x => x.name === 'Metagross-Mega');
