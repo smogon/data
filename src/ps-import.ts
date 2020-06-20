@@ -354,9 +354,9 @@ const renames: Map<string, Array<{ gen: GenerationNumber; name: string }>> = new
 // TODO: move to diff file?
 const idGens = new Map([
   // Species
-  ['volkritter', [5, 6, 7, 8]],
+  ['volkritter', [6, 7, 8]],
   ['privatyke', [4, 5, 6, 7, 8]],
-  ['volkraken', [5, 6, 7, 8]],
+  ['volkraken', [6, 7, 8]],
   ['voodoom', [4, 5, 6, 7, 8]],
   ['mollux', [5, 6, 7, 8]],
   ['aurumoth', [5, 6, 7, 8]],
