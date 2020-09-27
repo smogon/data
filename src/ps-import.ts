@@ -12,7 +12,7 @@ import * as Dex from './dex-interfaces';
 const DATAKINDS = ['species', 'abilities', 'items', 'moves', 'types'] as const;
 type DataKind = typeof DATAKINDS[number];
 
-const EXTRAKINDS = ['formatsData', 'learnsets'] as const;
+const EXTRAKINDS = ['formatsData', 'learnsets', 'itemText', 'moveText', 'abilityText'] as const;
 type ExtraKind = typeof EXTRAKINDS[number];
 
 // This is generally an ID map, but in the case of types, it isn't
@@ -75,8 +75,59 @@ function fixNonPSIDMap(mapIn: PSIDMap): PSIDMap {
   return mapOut;
 }
 
+function requireText(psDataDir: string, name: string, key?: string): PSIDMap {
+  const filename = path.resolve(process.cwd(), psDataDir, 'text', name);
+
+  try {
+    const mod = require(filename);
+    if (key !== undefined) {
+      return mod[key];
+    } else {
+      const vs = Object.values(mod);
+      if (vs.length === 1) {
+        return vs[0] as PSIDMap;
+      } else {
+        throw new Error('More than 1 export');
+      }
+    }
+  } catch (e) {
+    return {};
+  }
+}
+
+function pluckGenText(gen: GenerationNumber, text: PSIDMap): PSIDMap {
+  const result: PSIDMap = {};
+  for (const psid in text) {
+    result[psid] = gen === 8 ? {} : { inherit: true };
+    for (const k in text[psid]) {
+      if (gen === 8) {
+        if (k.match(/Gen\d$/) !== null) {
+          continue;
+        } else {
+          result[psid][k] = text[psid][k];
+        }
+      } else {
+        const suffix = `Gen${gen}`;
+        if (k.endsWith(suffix)) {
+          result[psid][k.slice(0, -suffix.length)] = text[psid][k];
+        } else {
+          continue;
+        }
+      }
+    }
+  }
+  return result;
+}
+
 function requirePSDex(psDataDir: string): PSDexStage1 {
   const dex = {} as PSDexStage1;
+
+  const text = {
+    moves: requireText(psDataDir, 'moves'),
+    items: requireText(psDataDir, 'items'),
+    abilities: requireText(psDataDir, 'abilities'),
+  };
+
   for (const gen of GENERATIONS) {
     dex[gen] = {
       num: gen,
@@ -87,6 +138,9 @@ function requirePSDex(psDataDir: string): PSDexStage1 {
       items: requireMap(psDataDir, gen, 'items'),
       moves: requireMap(psDataDir, gen, 'moves'),
       types: fixNonPSIDMap(requireMap(psDataDir, gen, 'typechart')),
+      itemText: pluckGenText(gen, text.items),
+      moveText: pluckGenText(gen, text.moves),
+      abilityText: pluckGenText(gen, text.abilities),
     };
   }
 
@@ -142,6 +196,15 @@ function inheritPSDex(dex: PSDexStage1): PSDexStage2 {
 
     mergeMap(dex[gen].species, dex[gen].learnsets);
     delete dex[gen].learnsets;
+
+    mergeMap(dex[gen].abilities, dex[gen].abilityText);
+    delete dex[gen].abilityText;
+
+    mergeMap(dex[gen].items, dex[gen].itemText);
+    delete dex[gen].itemText;
+
+    mergeMap(dex[gen].moves, dex[gen].moveText);
+    delete dex[gen].moveText;
   }
 
   return dex;
@@ -411,7 +474,7 @@ const idGens = new Map([
   ['swirlpool', [7, 8]],
   ['coribalis', [7, 8]],
   ['astrolotl', [8]],
-  ['justyke', [7,8]],
+  ['justyke', [7, 8]],
   ['solotl', [8]],
 
   // Moves
