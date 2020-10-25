@@ -476,6 +476,7 @@ const idGens = new Map([
   ['astrolotl', [8]],
   ['justyke', [7, 8]],
   ['solotl', [8]],
+  ['miasmaw', [8]],
 
   // Moves
   ['paleowave', [4, 5, 6, 7, 8]],
