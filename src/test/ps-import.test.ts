@@ -318,4 +318,11 @@ describe('ps-import', () => {
   test('genesect', () => {
     expect(dex.species.find(x => x.latest.name === 'Genesect-Douse')).toBeDefined();
   });
+
+  test('text', () => {
+    const rs8 = getGen(8).abilities.find1(x => x.name === 'Rough Skin');
+    const rs3 = getGen(3).abilities.find1(x => x.name === 'Rough Skin');
+
+    expect(rs8.desc).not.toBe(rs3.desc);
+  });
 });

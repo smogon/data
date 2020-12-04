@@ -99,21 +99,17 @@ function pluckGenText(gen: GenerationNumber, text: PSIDMap): PSIDMap {
   const result: PSIDMap = {};
   for (const psid in text) {
     result[psid] = gen === 8 ? {} : { inherit: true };
-    for (const k in text[psid]) {
-      if (gen === 8) {
-        if (k.match(/Gen\d$/) !== null) {
+    if (gen === 8) {
+      for (const k in text[psid]) {
+        if (k.match(/^gen\d$/) !== null) {
           continue;
         } else {
           result[psid][k] = text[psid][k];
         }
-      } else {
-        const suffix = `Gen${gen}`;
-        if (k.endsWith(suffix)) {
-          result[psid][k.slice(0, -suffix.length)] = text[psid][k];
-        } else {
-          continue;
-        }
       }
+    } else {
+      const textObj = text[psid][`gen${gen}`];
+      Object.assign(result[psid], textObj);
     }
   }
   return result;
