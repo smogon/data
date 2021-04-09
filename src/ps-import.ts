@@ -223,8 +223,8 @@ const PREDS = {
       return false;
     }
 
-    // Missingno, Pokestar
-    if (s.isNonstandard === 'Custom' || s.isNonstandard === 'Unobtainable') {
+    // Missingno
+    if (s.isNonstandard === 'Unobtainable') {
       return false;
     }
 
@@ -311,11 +311,6 @@ const PREDS = {
   },
 
   moves(gen: GenerationNumber, m: any) {
-    // TODO Magikarp's Revenge, not sure what to do here
-    if (m.isNonstandard === 'Custom') {
-      return false;
-    }
-
     if (m.isNonstandard === 'LGPE' && gen !== 7) {
       return false;
     }
@@ -509,12 +504,10 @@ function filterPSDex(dex: PSDexStage2) {
         const supplementalGens = idGens.get(psid);
 
         let inGen;
-        if (obj.isNonstandard === 'Past') {
+        if (obj.isNonstandard === 'Past' || obj.isNonstandard === 'Custom') {
           inGen = false;
         } else if (
-          obj.gen !== undefined &&
-          // This can be either null or undefined
-          !obj.isNonstandard
+          obj.gen !== undefined
         ) {
           inGen = gen >= obj.gen;
         } else if (supplementalGens !== undefined) {

@@ -91,6 +91,7 @@ describe('ps-import', () => {
     // We let Berserk Gene through even tho isNonstandard: Past, ensure we
     // didn't let this slip through as well
     expect(getGen(2).items.find(x => x.name === 'Lopunnite')).toBeUndefined();
+    expect(getGen(2).items.find(x => x.name === 'Fairy Gem')).toBeUndefined();
   });
 
   test('altBattleFormes', () => {
