@@ -64,13 +64,14 @@ function requireMap(psDataDir: string, gen: GenerationNumber, name: string, key?
 // Typechart isn't an IDMap... put a name attr (required) and index by id (for uniformity)
 function fixNonPSIDMap(mapIn: PSIDMap): PSIDMap {
   const mapOut = {} as PSIDMap;
-  for (const [name, obj] of Object.entries(mapIn)) {
+  for (const [id, obj] of Object.entries(mapIn)) {
     // Dark, Steel in gen 1
     // Can't skip, entry needed for gen filter
     if (obj !== null) {
-      obj.name = name;
+      // from DexTypes::getByID
+      obj.name = id.charAt(0).toUpperCase() + id.substr(1);;
     }
-    mapOut[toID(name)] = obj;
+    mapOut[id] = obj;
   }
   return mapOut;
 }
